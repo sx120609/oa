@@ -154,3 +154,55 @@ class Util
         return gmdate('Y-m-d H:i:s');
     }
 }
+
+class Auth
+{
+    private static bool $resolved = false;
+    private static ?array $user = null;
+
+    public static function user(): ?array
+    {
+        if (self::$resolved) {
+            return self::$user;
+        }
+
+        self::$resolved = true;
+
+        $userIdHeader = Util::requestHeader('X-User-Id');
+        if ($userIdHeader === null) {
+            self::$user = null;
+            return null;
+        }
+
+        $userIdHeader = \trim($userIdHeader);
+        if ($userIdHeader === '' || !\ctype_digit($userIdHeader)) {
+            self::$user = null;
+            return null;
+        }
+
+        $userId = (int)$userIdHeader;
+        if ($userId <= 0) {
+            self::$user = null;
+            return null;
+        }
+
+        $statement = DB::pdo()->prepare('SELECT id, name, email, role FROM users WHERE id = :id');
+        $statement->execute([':id' => $userId]);
+        $user = $statement->fetch(PDO::FETCH_ASSOC);
+
+        self::$user = $user === false ? null : $user;
+
+        return self::$user;
+    }
+}
+
+function requireRole(array $roles): void
+{
+    $user = Auth::user();
+    $role = $user['role'] ?? null;
+
+    if ($role === null || !\in_array($role, $roles, true)) {
+        Http::error('Forbidden', 403, 'forbidden');
+        exit;
+    }
+}

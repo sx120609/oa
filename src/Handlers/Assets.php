@@ -5,6 +5,7 @@ namespace App\Handlers;
 use App\DB;
 use App\Http;
 use App\Util;
+use function App\requireRole;
 use PDO;
 use PDOException;
 
@@ -74,6 +75,8 @@ class Assets
 
     public static function assign(string $assetId): void
     {
+        requireRole(['asset_admin', 'admin']);
+
         $id = (int)$assetId;
         $payload = Util::requestBody();
         $userId = isset($payload['user_id']) ? (int)$payload['user_id'] : 0;
@@ -204,6 +207,8 @@ class Assets
 
     public static function release(string $assetId): void
     {
+        requireRole(['asset_admin', 'admin']);
+
         $id = (int)$assetId;
         $payload = Util::requestBody();
         $userId = isset($payload['user_id']) ? (int)$payload['user_id'] : 0;

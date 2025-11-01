@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS users (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
+    role VARCHAR(50) NOT NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -60,9 +61,10 @@ CREATE TABLE IF NOT EXISTS repair_orders (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Seed data
-INSERT INTO users (name, email) VALUES
-    ('Alice Chen', 'alice@example.com'),
-    ('Ben Liu', 'ben@example.com');
+INSERT INTO users (name, email, role) VALUES
+    ('Alice Chen', 'alice@example.com', 'asset_admin'),
+    ('Ben Liu', 'ben@example.com', 'technician'),
+    ('Dana Xu', 'dana@example.com', 'admin');
 
 INSERT INTO projects (name, code) VALUES
     ('Office Expansion', 'OFF-001'),
