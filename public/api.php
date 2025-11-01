@@ -6,15 +6,21 @@ use App\Handlers\Reports;
 use App\Http;
 use App\Router;
 use App\Util;
+use Throwable;
 
-$app = require __DIR__ . '/../src/bootstrap.php';
+try {
+    $app = require __DIR__ . '/../src/bootstrap.php';
+} catch (Throwable $exception) {
+    renderBootstrapFailure($exception);
+    return;
+}
 
 $providedKey = Util::requestHeader('X-Api-Key') ?? '';
 $expectedKey = $app['config']['api_key'] ?? 'devkey';
 
 if (!hash_equals($expectedKey, $providedKey)) {
     Http::error('Unauthorized', 401, 'unauthorized');
-    exit;
+    return;
 }
 
 $router = new Router();
@@ -38,7 +44,11 @@ $router->add('GET', '/^\/reports\/costs$/', [Reports::class, 'costs']);
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $path = resolvePath();
 
-$router->dispatch($method, $path);
+try {
+    $router->dispatch($method, $path);
+} catch (Throwable $exception) {
+    renderUnhandledException($exception);
+}
 
 function resolvePath(): string
 {
@@ -69,4 +79,48 @@ function ensureLeadingSlash(string $path): string
     }
 
     return $path[0] === '/' ? $path : '/' . $path;
+}
+
+function renderBootstrapFailure(Throwable $exception): void
+{
+    renderJsonException($exception, 'Service initialisation failed', 'bootstrap_failed');
+}
+
+function renderUnhandledException(Throwable $exception): void
+{
+    renderJsonException($exception, 'Internal Server Error', 'internal_error');
+}
+
+function renderJsonException(Throwable $exception, string $message, string $code): void
+{
+    error_log((string) $exception);
+
+    http_response_code(500);
+    header('Content-Type: application/json; charset=utf-8');
+
+    $payload = [
+        'error' => $code,
+        'message' => $message,
+    ];
+
+    if (shouldExposeDetails()) {
+        $payload['details'] = [
+            'exception' => get_class($exception),
+            'message' => $exception->getMessage(),
+        ];
+    }
+
+    echo json_encode($payload, JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+function shouldExposeDetails(): bool
+{
+    $debug = getenv('APP_DEBUG');
+    if ($debug === false) {
+        return false;
+    }
+
+    $normalized = strtolower(trim($debug));
+    return in_array($normalized, ['1', 'true', 'on', 'yes'], true);
 }

@@ -146,9 +146,12 @@ async function fetchJson(path, method = 'GET', body) {
     try {
       payload = JSON.parse(text);
     } catch (_parseError) {
-      const parseErr = new Error('服务端返回了无法解析的响应');
+      const snippet = text.length > 180 ? `${text.slice(0, 177)}…` : text;
+      const parseErr = new Error(`服务端返回了无法解析的响应: ${snippet}`);
       parseErr.code = 'invalid_response';
       parseErr.status = response.status || 500;
+      parseErr.raw = text;
+      parseErr.details = snippet;
       throw parseErr;
     }
   }
