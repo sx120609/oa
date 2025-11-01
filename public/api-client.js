@@ -1,4 +1,4 @@
-const DEFAULT_BASE_URL = 'https://oaapi.lizmt.cn';
+const DEFAULT_BASE_URL = resolveDefaultBaseUrl();
 
 export class ApiError extends Error {
     constructor(message, { status = 0, code = 'error', details = null, payload = null, cause = undefined } = {}) {
@@ -45,8 +45,9 @@ export function createApiClient(options = {}) {
 
     function buildUrl(path, query) {
         const root = new URL(baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`);
-        const targetPath = path.startsWith('/') ? path : `/${path}`;
-        const url = new URL(targetPath, root);
+        const safePath = typeof path === 'string' ? path : String(path ?? '');
+        const targetPath = safePath.startsWith('/') ? safePath.slice(1) : safePath;
+        const url = new URL(targetPath ?? '', root);
 
         if (query && typeof query === 'object') {
             Object.entries(query)
@@ -220,11 +221,40 @@ function normaliseBaseUrl(value) {
         throw new ApiError('Base URL cannot be empty', { code: 'invalid_base_url' });
     }
 
-    if (!/^https?:\/\//i.test(trimmed)) {
-        throw new ApiError('Base URL must start with http:// or https://', { code: 'invalid_base_url' });
+    const resolved = resolveBaseUrl(trimmed);
+    return resolved.replace(/\/+$/, '');
+}
+
+function resolveDefaultBaseUrl() {
+    if (typeof window !== 'undefined' && window.location) {
+        try {
+            const url = new URL('api.php', window.location.href);
+            return url.toString().replace(/\/+$/, '');
+        } catch (error) {
+            console.warn('Failed to resolve default API base URL from window.location', error);
+        }
     }
 
-    return trimmed.replace(/\/+$/, '');
+    return 'http://localhost/api.php';
+}
+
+function resolveBaseUrl(value) {
+    if (/^https?:\/\//i.test(value)) {
+        return value;
+    }
+
+    if (typeof window === 'undefined' || !window.location) {
+        throw new ApiError('Base URL must be an absolute URL', { code: 'invalid_base_url' });
+    }
+
+    try {
+        return new URL(value, window.location.href).toString();
+    } catch (error) {
+        throw new ApiError('Base URL is invalid', {
+            code: 'invalid_base_url',
+            cause: error,
+        });
+    }
 }
 
 if (typeof window !== 'undefined') {

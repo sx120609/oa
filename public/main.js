@@ -1,9 +1,6 @@
 import { ApiError, createApiClient } from './api-client.js';
 
-const DEFAULT_BASE_URL = 'https://oaapi.lizmt.cn';
-
 const api = createApiClient({
-  baseUrl: DEFAULT_BASE_URL,
   apiKey: 'devkey',
   userId: '1',
 });
@@ -12,6 +9,7 @@ const content = document.getElementById('content');
 const alerts = document.getElementById('alerts');
 const navLinks = Array.from(document.querySelectorAll('.nav-link'));
 const configForm = document.getElementById('config-form');
+const endpointPreview = document.getElementById('endpoint-preview');
 
 const routes = {
   assets: renderAssetsPage,
@@ -46,6 +44,7 @@ function initialiseConfig() {
   const auth = api.getAuth();
   configForm.apiKey.value = auth.apiKey || '';
   configForm.userId.value = auth.userId || '';
+  updateEndpointPreview();
 
   configForm.addEventListener('submit', (event) => {
     event.preventDefault();
@@ -56,6 +55,7 @@ function initialiseConfig() {
     });
 
     showNotice('success', `接口配置已更新（${api.getBaseUrl()}）`);
+    updateEndpointPreview();
   });
 }
 
@@ -112,6 +112,14 @@ function showNotice(type, message) {
 
 function clearNotice() {
   alerts.innerHTML = '';
+}
+
+function updateEndpointPreview() {
+  if (!endpointPreview) {
+    return;
+  }
+
+  endpointPreview.textContent = `${api.getBaseUrl()}/*`;
 }
 
 function renderAssetsPage() {
