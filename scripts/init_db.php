@@ -15,7 +15,7 @@ $sql = file_get_contents($migrationFile);
 
 $pdo = DB::pdo();
 $pdo->exec('SET NAMES utf8mb4');
-$pdo->exec('SET FOREIGN_KEY_CHECKS = 1');
+$pdo->exec('SET FOREIGN_KEY_CHECKS = 0');
 
 $statements = array_filter(array_map('trim', preg_split('/;\s*(?:\r?\n|$)/', $sql)));
 
@@ -28,8 +28,11 @@ foreach ($statements as $statement) {
         $pdo->exec($statement);
     } catch (\Throwable $throwable) {
         fwrite(STDERR, "Failed to execute statement:\n{$statement}\n{$throwable->getMessage()}\n");
+        $pdo->exec('SET FOREIGN_KEY_CHECKS = 1');
         exit(1);
     }
 }
+
+$pdo->exec('SET FOREIGN_KEY_CHECKS = 1');
 
 echo "Database initialisation complete using MySQL.\n";
