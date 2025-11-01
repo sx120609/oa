@@ -1,7 +1,7 @@
 # 设备全生命周期管理 API 约束
 
 ## 架构与运行时
-- 使用 **无框架** 原生 PHP 实现，所有请求经 `public/index.php` 单入口调度。
+- 使用 **无框架** 原生 PHP 实现，所有请求经 `public/api.php` 单入口调度。
 - 依赖 PDO 扩展，数据库仅支持 MySQL 连接（通过环境变量配置）。
 - 统一使用 `config.php` 管理数据库及认证参数。
 
@@ -31,7 +31,7 @@
 /                        # 根目录
 ├─ config.php            # 全局配置
 ├─ app/                  # 业务类库 (Database, Response, HttpException 等)
-├─ public/index.php      # 单入口路由 & 控制器
+├─ public/api.php        # 单入口路由 & 控制器
 ├─ .ai/constraints.md    # 本约束文档
 └─ docs/domain.md        # 领域说明文档
 ```
@@ -42,7 +42,7 @@ curl -X POST \
   -H "Content-Type: application/json" \
   -H "X-Api-Key: devkey" \
   -d '{"name":"Laptop A","serial_number":"SN123"}' \
-  http://localhost:8000/assets
+  http://localhost:8000/api.php/assets
 ```
 
 ## 错误码表

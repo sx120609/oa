@@ -22,7 +22,7 @@ trap cleanup EXIT
 for _ in $(seq 1 20); do
     if curl --fail --silent --show-error \
         -H "X-Api-Key: ${API_KEY_VALUE}" \
-        "http://127.0.0.1:8000/health" \
+        "http://127.0.0.1:8000/api.php/health" \
         > /dev/null 2>&1; then
         break
     fi
@@ -35,12 +35,12 @@ done
 
 curl --fail --silent --show-error \
     -H "X-Api-Key: ${API_KEY_VALUE}" \
-    "http://127.0.0.1:8000/health"
+    "http://127.0.0.1:8000/api.php/health"
 echo
 
 curl --fail --silent --show-error \
     -H "X-Api-Key: ${API_KEY_VALUE}" \
-    "http://127.0.0.1:8000/assets"
+    "http://127.0.0.1:8000/api.php/assets"
 echo
 
 ASSET_NAME="Check Asset $(date +%s)"
@@ -49,7 +49,7 @@ CREATE_RESPONSE=$(curl --fail --silent --show-error \
     -H "X-Api-Key: ${API_KEY_VALUE}" \
     -H "Content-Type: application/json" \
     -d "{\"name\":\"${ASSET_NAME}\"}" \
-    "http://127.0.0.1:8000/assets")
+    "http://127.0.0.1:8000/api.php/assets")
 
 echo "${CREATE_RESPONSE}"
 
@@ -69,7 +69,7 @@ curl --fail --silent --show-error \
     -H "X-User-Id: 1" \
     -H "Content-Type: application/json" \
     -d "${ASSIGN_PAYLOAD}" \
-    "http://127.0.0.1:8000/assets/${NEW_ASSET_ID}/assign"
+    "http://127.0.0.1:8000/api.php/assets/${NEW_ASSET_ID}/assign"
 echo
 
 curl --fail --silent --show-error \
@@ -78,7 +78,7 @@ curl --fail --silent --show-error \
     -H "X-User-Id: 1" \
     -H "Content-Type: application/json" \
     -d "${ASSIGN_PAYLOAD}" \
-    "http://127.0.0.1:8000/assets/${NEW_ASSET_ID}/assign"
+    "http://127.0.0.1:8000/api.php/assets/${NEW_ASSET_ID}/assign"
 echo
 
 RETURN_PAYLOAD=$(php -r '[$user,$project,$no]=array_slice($argv,1); echo json_encode(["user_id"=>(int)$user,"project_id"=>(int)$project,"no"=>$no]);' 1 1 "RET-CHECK-$(date +%s)")
@@ -89,7 +89,7 @@ curl --fail --silent --show-error \
     -H "X-User-Id: 1" \
     -H "Content-Type: application/json" \
     -d "${RETURN_PAYLOAD}" \
-    "http://127.0.0.1:8000/assets/${NEW_ASSET_ID}/return"
+    "http://127.0.0.1:8000/api.php/assets/${NEW_ASSET_ID}/return"
 echo
 
 CONFLICT_NO_A="REQ-CONFLICT-${RANDOM}A"
@@ -110,7 +110,7 @@ if ($assetId <= 0 || $apiKey === false || $noA === false || $noB === false) {
     throw new RuntimeException('Missing environment for parallel assignment test.');
 }
 
-$endpoint = sprintf('http://127.0.0.1:8000/assets/%d/assign', $assetId);
+$endpoint = sprintf('http://127.0.0.1:8000/api.php/assets/%d/assign', $assetId);
 $headers = [
     'X-Api-Key: ' . $apiKey,
     'X-User-Id: 1',

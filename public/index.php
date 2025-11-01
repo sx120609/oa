@@ -1,41 +1,14 @@
 <?php
+declare(strict_types=1);
 
-use App\Handlers\Assets;
-use App\Handlers\Repairs;
-use App\Handlers\Reports;
-use App\Http;
-use App\Router;
-use App\Util;
+$entry = __DIR__ . '/index.html';
 
-$app = require __DIR__ . '/../src/bootstrap.php';
-
-$providedKey = Util::requestHeader('X-Api-Key') ?? '';
-$expectedKey = $app['config']['api_key'] ?? 'devkey';
-
-if (!hash_equals($expectedKey, $providedKey)) {
-    Http::error('Unauthorized', 401, 'unauthorized');
-    exit;
+if (!is_file($entry)) {
+    http_response_code(500);
+    header('Content-Type: text/plain; charset=utf-8');
+    echo 'Frontend entry (public/index.html) not found.';
+    return;
 }
 
-$router = new Router();
-$router->add('GET', '/^\/health$/', static function (): void {
-    Http::json([
-        'status' => 'ok',
-        'timestamp' => Util::now(),
-    ]);
-});
-$router->add('GET', '/^\/assets$/', [Assets::class, 'index']);
-$router->add('POST', '/^\/assets$/', [Assets::class, 'store']);
-$router->add('GET', '/^\/assets\/(\d+)$/', [Assets::class, 'show']);
-$router->add('POST', '/^\/assets\/(\d+)\/assign$/', [Assets::class, 'assign']);
-$router->add('POST', '/^\/assets\/(\d+)\/return$/', [Assets::class, 'release']);
-$router->add('GET', '/^\/repairs$/', [Repairs::class, 'index']);
-$router->add('POST', '/^\/repair-orders$/', [Repairs::class, 'store']);
-$router->add('POST', '/^\/repair-orders\/(\d+)\/close$/', [Repairs::class, 'close']);
-$router->add('GET', '/^\/reports\/summary$/', [Reports::class, 'summary']);
-$router->add('GET', '/^\/reports\/costs$/', [Reports::class, 'costs']);
-
-$method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
-$path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
-
-$router->dispatch($method, $path);
+header('Content-Type: text/html; charset=utf-8');
+readfile($entry);

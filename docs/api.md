@@ -1,11 +1,12 @@
 # Device Lifecycle API Reference
 
 ## Overview
-- **Runtime**: Framework-free PHP 8 single-entry application (`public/index.php`).
+- **Runtime**: Framework-free PHP 8 API entry point (`public/api.php`) paired with a static SPA shell served from `public/index.php`.
 - **Database**: MySQL (PDO). Configure connection via environment variables (`DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`, `DB_CHARSET`).
 - **Authentication**: All requests require the header `X-Api-Key`. Default key is `devkey`; override with the `API_KEY` environment variable.
 - **Actors**: User accounts carry a `role` (`technician`, `asset_admin`, `admin`). Certain endpoints require `X-User-Id` to resolve the caller and enforce role-based authorisation.
 - **Conventions**: Responses use JSON envelopes: `{"data": ...}` for success, `{"error": "code", "message": "..."}` for failures. Request bodies are JSON unless noted otherwise.
+- **Routing**: Endpoints listed below are relative paths; when accessing the API from the bundled SPA, prefix them with `/api.php` (for example, `/api.php/assets`).
 
 ## Headers
 | Header | Required | Description |
@@ -47,7 +48,7 @@ Returns service liveness info.
 
 **cURL**
 ```bash
-curl -H "X-Api-Key: devkey" http://127.0.0.1:8000/health
+curl -H "X-Api-Key: devkey" http://127.0.0.1:8000/api.php/health
 ```
 
 ---
@@ -78,7 +79,7 @@ List assets, optionally filtered by `status` (`in_stock`, `in_use`, `under_repai
 
 **cURL**
 ```bash
-curl -H "X-Api-Key: devkey" "http://127.0.0.1:8000/assets?status=in_stock"
+curl -H "X-Api-Key: devkey" "http://127.0.0.1:8000/api.php/assets?status=in_stock"
 ```
 
 ---
@@ -106,7 +107,7 @@ Create a new asset. Defaults to `status = in_stock`.
 
 **cURL**
 ```bash
-curl -X POST http://127.0.0.1:8000/assets \
+curl -X POST http://127.0.0.1:8000/api.php/assets \
   -H "X-Api-Key: devkey" \
   -H "Content-Type: application/json" \
   -d '{"name":"Label Printer","model":"LP-500"}'
@@ -182,7 +183,7 @@ If the same `no` already exists for this asset assignment, the service returns t
 
 **cURL**
 ```bash
-curl -X POST http://127.0.0.1:8000/assets/2/assign \
+curl -X POST http://127.0.0.1:8000/api.php/assets/2/assign \
   -H "X-Api-Key: devkey" \
   -H "X-User-Id: 1" \
   -H "Content-Type: application/json" \
@@ -226,7 +227,7 @@ Return an asset back to inventory. Requires role `asset_admin` or `admin`.
 
 **cURL**
 ```bash
-curl -X POST http://127.0.0.1:8000/assets/2/return \
+curl -X POST http://127.0.0.1:8000/api.php/assets/2/return \
   -H "X-Api-Key: devkey" \
   -H "X-User-Id: 1" \
   -H "Content-Type: application/json" \
@@ -275,7 +276,7 @@ Create a repair order and move the asset into `under_repair`.
 
 **cURL**
 ```bash
-curl -X POST http://127.0.0.1:8000/repair-orders \
+curl -X POST http://127.0.0.1:8000/api.php/repair-orders \
   -H "X-Api-Key: devkey" \
   -H "Content-Type: application/json" \
   -d '{"asset_id":2,"symptom":"Extruder jammed"}'
@@ -309,7 +310,7 @@ Close a repair order (`created`, `repairing`, or `qa` → `closed`) and return t
 
 **cURL**
 ```bash
-curl -X POST http://127.0.0.1:8000/repair-orders/5/close \
+curl -X POST http://127.0.0.1:8000/api.php/repair-orders/5/close \
   -H "X-Api-Key: devkey"
 ```
 
@@ -348,7 +349,7 @@ Aggregate per-asset repair spend (labor + parts costs).
 
 **cURL**
 ```bash
-curl -H "X-Api-Key: devkey" http://127.0.0.1:8000/reports/costs
+curl -H "X-Api-Key: devkey" http://127.0.0.1:8000/api.php/reports/costs
 ```
 
 ## Typical Business Flow
@@ -356,14 +357,14 @@ End-to-end example demonstrating the lifecycle: create asset → assign → crea
 
 ```bash
 # 1. Create a fresh asset (defaults to in_stock)
-curl -s -X POST http://127.0.0.1:8000/assets \
+curl -s -X POST http://127.0.0.1:8000/api.php/assets \
   -H "X-Api-Key: devkey" \
   -H "Content-Type: application/json" \
   -d '{"name":"Laser Cutter","model":"LC-9000"}'
 # => {"data":{"id":6}}
 
 # 2. Assign it to a project (caller must be asset_admin or admin)
-curl -s -X POST http://127.0.0.1:8000/assets/6/assign \
+curl -s -X POST http://127.0.0.1:8000/api.php/assets/6/assign \
   -H "X-Api-Key: devkey" \
   -H "X-User-Id: 1" \
   -H "Content-Type: application/json" \
@@ -371,19 +372,19 @@ curl -s -X POST http://127.0.0.1:8000/assets/6/assign \
 # => returns updated asset + usage record
 
 # 3. File a repair order when an issue is detected
-curl -s -X POST http://127.0.0.1:8000/repair-orders \
+curl -s -X POST http://127.0.0.1:8000/api.php/repair-orders \
   -H "X-Api-Key: devkey" \
   -H "Content-Type: application/json" \
   -d '{"asset_id":6,"symptom":"Lens alignment"}'
 # => asset transitions to under_repair
 
 # 4. Close the repair once QA passes
-curl -s -X POST http://127.0.0.1:8000/repair-orders/<orderId>/close \
+curl -s -X POST http://127.0.0.1:8000/api.php/repair-orders/<orderId>/close \
   -H "X-Api-Key: devkey"
 # => repair order status becomes closed, asset returns to in_use
 
 # 5. Return the asset to inventory after user hand-back
-curl -s -X POST http://127.0.0.1:8000/assets/6/return \
+curl -s -X POST http://127.0.0.1:8000/api.php/assets/6/return \
   -H "X-Api-Key: devkey" \
   -H "X-User-Id: 1" \
   -H "Content-Type: application/json" \

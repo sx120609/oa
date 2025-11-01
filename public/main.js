@@ -113,16 +113,40 @@ function clearNotice() {
 function currentBaseUrl() {
   const base = state.baseUrl.trim();
   if (base) {
-    return base;
+    return removeTrailingSlash(base);
   }
+
   if (API_BASE) {
-    return API_BASE;
+    return removeTrailingSlash(API_BASE);
   }
-  return window.location.origin;
+
+  return '';
+}
+
+function removeTrailingSlash(value) {
+  if (value.endsWith('/')) {
+    return value.slice(0, -1);
+  }
+  return value;
+}
+
+function buildApiUrl(path) {
+  const base = currentBaseUrl();
+  const normalisedPath = path.startsWith('/') ? path : `/${path}`;
+
+  if (!base) {
+    return `/api.php${normalisedPath}`;
+  }
+
+  if (base.endsWith('.php')) {
+    return `${base}${normalisedPath}`;
+  }
+
+  return `${base}/api.php${normalisedPath}`;
 }
 
 async function fetchJson(path, method = 'GET', body) {
-  const url = new URL(path, currentBaseUrl());
+  const url = buildApiUrl(path);
   const headers = {
     Accept: 'application/json',
     'X-Api-Key': state.apiKey || 'devkey',
@@ -141,7 +165,7 @@ async function fetchJson(path, method = 'GET', body) {
 
   let response;
   try {
-    response = await fetch(url.toString(), init);
+    response = await fetch(url, init);
   } catch (error) {
     const networkError = new Error('网络请求失败');
     networkError.code = 'network_error';

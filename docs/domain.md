@@ -62,5 +62,5 @@ curl -X PATCH \
   -H "Content-Type: application/json" \
   -H "X-Api-Key: devkey" \
   -d '{"status":"qa"}' \
-  http://localhost:8000/repair-orders/1/status
+  http://localhost:8000/api.php/repair-orders/1/status
 ```

@@ -5,7 +5,7 @@ This repository provides a minimal, framework-free PHP project skeleton for buil
 ## Project layout
 
 ```
-public/           # Web root containing single entry point and optional rewrite rules
+public/           # Web root containing SPA shell (index.php/html) and API entry point (api.php)
 src/              # Configuration, bootstrap logic, helper utilities, and request handlers
 scripts/          # CLI scripts such as database initialisation
 migrations/       # SQL migration files with schema and seed data
@@ -32,7 +32,7 @@ migrations/       # SQL migration files with schema and seed data
    ```
 5. **Send a test request** (replace API key if customised):
    ```bash
-   curl -H "X-Api-Key: devkey" http://127.0.0.1:8000/assets
+   curl -H "X-Api-Key: devkey" http://127.0.0.1:8000/api.php/assets
    ```
 
 ## Frontend usage
@@ -136,8 +136,8 @@ php -S 0.0.0.0:8000 -t public
 使用 `curl` 检查健康接口与资产列表：
 
 ```bash
-curl -H "X-Api-Key: ${API_KEY:-devkey}" http://127.0.0.1:8000/health
-curl -H "X-Api-Key: ${API_KEY:-devkey}" http://127.0.0.1:8000/assets
+curl -H "X-Api-Key: ${API_KEY:-devkey}" http://127.0.0.1:8000/api.php/health
+curl -H "X-Api-Key: ${API_KEY:-devkey}" http://127.0.0.1:8000/api.php/assets
 ```
 
 当返回形如 `{"data":...}` 的 JSON 即表示服务正常。

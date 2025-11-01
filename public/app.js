@@ -1,6 +1,6 @@
 (function () {
     const state = {
-        baseUrl: '/',
+        baseUrl: '',
         apiKey: 'devkey',
         userId: null,
     };
@@ -16,14 +16,27 @@
     }
 
     function buildUrl(path) {
-        const base = normaliseBase(state.baseUrl);
         if (path.startsWith('http://') || path.startsWith('https://')) {
             return path;
         }
-        if (path.startsWith('/')) {
-            return `${base}${path}` || path;
+
+        const base = normaliseBase(state.baseUrl);
+        const prefix = resolveApiPrefix(base);
+        const normalisedPath = path.startsWith('/') ? path : `/${path}`;
+
+        return `${prefix}${normalisedPath}`;
+    }
+
+    function resolveApiPrefix(base) {
+        if (!base || base === '') {
+            return '/api.php';
         }
-        return `${base}/${path}`;
+
+        if (base.endsWith('.php')) {
+            return base;
+        }
+
+        return `${base}/api.php`;
     }
 
     function logMessage(message, payload) {
@@ -147,7 +160,7 @@
         event.preventDefault();
         const form = event.currentTarget;
         const formData = new FormData(form);
-        state.baseUrl = (formData.get('api_base') || '/').toString().trim() || '/';
+        state.baseUrl = (formData.get('api_base') || '').toString().trim();
         state.apiKey = (formData.get('api_key') || '').toString().trim();
         const userIdRaw = (formData.get('user_id') || '').toString().trim();
         state.userId = userIdRaw === '' ? null : userIdRaw;

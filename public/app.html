@@ -18,7 +18,7 @@
         <form id="config-form" class="form-grid">
             <label>
                 API Base URL
-                <input type="text" id="api-base" name="api_base" placeholder="/" value="/">
+                <input type="text" id="api-base" name="api_base" placeholder="http://127.0.0.1:8000" value="">
             </label>
             <label>
                 X-Api-Key
@@ -30,7 +30,7 @@
             </label>
             <button type="submit">Apply</button>
         </form>
-        <p class="hint">Leave API Base URL as "/" when serving the frontend from the same host as the API.</p>
+        <p class="hint">Leave API Base URL blank when serving the frontend from the same host; requests will automatically target <code>/api.php</code>.</p>
     </section>
 
     <section class="card">
