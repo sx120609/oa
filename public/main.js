@@ -1,9 +1,12 @@
-const API_BASE = 'https://oaapi.lizmt.cn';
+import { ApiError, createApiClient } from './api-client.js';
 
-const state = {
+const DEFAULT_BASE_URL = 'https://oaapi.lizmt.cn';
+
+const api = createApiClient({
+  baseUrl: DEFAULT_BASE_URL,
   apiKey: 'devkey',
   userId: '1',
-};
+});
 
 const content = document.getElementById('content');
 const alerts = document.getElementById('alerts');
@@ -18,17 +21,16 @@ const routes = {
 
 document.addEventListener('DOMContentLoaded', () => {
   initialiseConfig();
+
   navLinks.forEach((link) => {
     link.addEventListener('click', (event) => {
       event.preventDefault();
-      const route = link.dataset.route;
-      navigate(route);
+      navigate(link.dataset.route);
     });
   });
 
   window.addEventListener('popstate', () => {
-    const route = resolveRoute();
-    renderRoute(route);
+    renderRoute(resolveRoute());
   });
 
   const initialRoute = resolveRoute();
@@ -41,14 +43,19 @@ function initialiseConfig() {
     return;
   }
 
-  configForm.apiKey.value = state.apiKey;
-  configForm.userId.value = state.userId;
+  const auth = api.getAuth();
+  configForm.apiKey.value = auth.apiKey || '';
+  configForm.userId.value = auth.userId || '';
 
   configForm.addEventListener('submit', (event) => {
     event.preventDefault();
-    state.apiKey = configForm.apiKey.value.trim() || 'devkey';
-    state.userId = configForm.userId.value.trim();
-    showNotice('success', '接口配置已更新');
+
+    api.setAuth({
+      apiKey: configForm.apiKey.value.trim() || 'devkey',
+      userId: configForm.userId.value.trim() || null,
+    });
+
+    showNotice('success', `接口配置已更新（${api.getBaseUrl()}）`);
   });
 }
 
@@ -107,66 +114,6 @@ function clearNotice() {
   alerts.innerHTML = '';
 }
 
-function buildApiUrl(path) {
-  const normalisedPath = path.startsWith('/') ? path : `/${path}`;
-  return `${API_BASE}${normalisedPath}`;
-}
-
-async function fetchJson(path, method = 'GET', body) {
-  const url = buildApiUrl(path);
-  const headers = {
-    Accept: 'application/json',
-    'X-Api-Key': state.apiKey || 'devkey',
-  };
-
-  if (state.userId) {
-    headers['X-User-Id'] = state.userId;
-  }
-
-  const init = { method, headers };
-
-  if (body !== undefined) {
-    headers['Content-Type'] = 'application/json';
-    init.body = JSON.stringify(body);
-  }
-
-  let response;
-  try {
-    response = await fetch(url, init);
-  } catch (error) {
-    const networkError = new Error('网络请求失败');
-    networkError.code = 'network_error';
-    networkError.status = 0;
-    throw networkError;
-  }
-
-  const text = await response.text();
-  let payload = null;
-  if (text) {
-    try {
-      payload = JSON.parse(text);
-    } catch (_parseError) {
-      const snippet = text.length > 180 ? `${text.slice(0, 177)}…` : text;
-      const parseErr = new Error(`服务端返回了无法解析的响应: ${snippet}`);
-      parseErr.code = 'invalid_response';
-      parseErr.status = response.status || 500;
-      parseErr.raw = text;
-      parseErr.details = snippet;
-      throw parseErr;
-    }
-  }
-
-  if (!response.ok) {
-    const error = new Error(payload?.message || '请求失败');
-    error.code = payload?.error || 'error';
-    error.status = response.status;
-    error.details = payload?.details;
-    throw error;
-  }
-
-  return payload ? payload.data : null;
-}
-
 function renderAssetsPage() {
   content.innerHTML = `
     <section class="card">
@@ -215,7 +162,7 @@ async function listAssets() {
   tbody.innerHTML = '<tr><td colspan="5">加载中...</td></tr>';
 
   try {
-    const data = await fetchJson('/assets');
+    const data = await api.listAssets();
     const items = Array.isArray(data?.items) ? data.items : [];
 
     if (items.length === 0) {
@@ -239,7 +186,7 @@ async function listAssets() {
       .join('');
   } catch (error) {
     tbody.innerHTML = `<tr><td colspan="5">加载失败：${escapeHtml(error.message)}</td></tr>`;
-    showNotice('error', `${error.message} (${error.code || 'error'})`);
+    showNotice('error', formatApiError(error));
   }
 }
 
@@ -259,12 +206,12 @@ async function createAsset(form) {
     if (model !== '') {
       payload.model = model;
     }
-    const result = await fetchJson('/assets', 'POST', payload);
+    const result = await api.createAsset(payload);
     showNotice('success', `资产创建成功（ID: ${result?.id ?? '未知'}）`);
     form.reset();
     listAssets();
   } catch (error) {
-    showNotice('error', `${error.message} (${error.code || 'error'})`);
+    showNotice('error', formatApiError(error));
   }
 }
 
@@ -312,7 +259,7 @@ async function repairList() {
   tbody.innerHTML = '<tr><td colspan="4">加载中...</td></tr>';
 
   try {
-    const data = await fetchJson('/reports/costs');
+    const data = await api.getCostReport();
     const items = Array.isArray(data?.items) ? data.items : [];
 
     if (items.length === 0) {
@@ -336,7 +283,7 @@ async function repairList() {
     }
   } catch (error) {
     tbody.innerHTML = `<tr><td colspan="4">加载失败：${escapeHtml(error.message)}</td></tr>`;
-    showNotice('error', `${error.message} (${error.code || 'error'})`);
+    showNotice('error', formatApiError(error));
   }
 }
 
@@ -348,3 +295,11 @@ function escapeHtml(value) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 }
+
+function formatApiError(error) {
+  if (error instanceof ApiError) {
+    return `${error.message} (${error.code}${error.status ? `/${error.status}` : ''})`;
+  }
+  return error.message || '未知错误';
+}
+
