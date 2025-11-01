@@ -30,8 +30,8 @@ $router->add('GET', '/^\/assets\/(\d+)$/', [Assets::class, 'show']);
 $router->add('POST', '/^\/assets\/(\d+)\/assign$/', [Assets::class, 'assign']);
 $router->add('POST', '/^\/assets\/(\d+)\/return$/', [Assets::class, 'release']);
 $router->add('GET', '/^\/repairs$/', [Repairs::class, 'index']);
-$router->add('POST', '/^\/assets\/(\d+)\/repairs$/', [Repairs::class, 'store']);
-$router->add('PATCH', '/^\/repair-orders\/(\d+)$/', [Repairs::class, 'updateStatus']);
+$router->add('POST', '/^\/repair-orders$/', [Repairs::class, 'store']);
+$router->add('POST', '/^\/repair-orders\/(\d+)\/close$/', [Repairs::class, 'close']);
 $router->add('GET', '/^\/reports\/summary$/', [Reports::class, 'summary']);
 
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
