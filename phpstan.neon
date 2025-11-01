@@ -11,3 +11,5 @@ parameters:
   tmpDir: storage/app/phpstan
   parallel:
     maximumNumberOfProcesses: 0
+  ignoreErrors:
+    - '#Class App\\Models\\.* uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types#'
