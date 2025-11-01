@@ -1,0 +1,118 @@
+:root {
+    color-scheme: light dark;
+    --font-stack: "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    --surface-bg: #f4f6fb;
+    --surface-bg-dark: #1f1f24;
+    --text-color: #1b1b1f;
+    --text-color-dark: #f5f5f7;
+    --border-color: rgba(17, 24, 39, 0.15);
+    --border-color-dark: rgba(243, 244, 246, 0.25);
+    --accent: #2563eb;
+    --accent-hover: #1d4ed8;
+    --accent-dark: #3b82f6;
+    --accent-dark-hover: #60a5fa;
+}
+
+body {
+    margin: 0;
+    font-family: var(--font-stack);
+    background: var(--surface-bg);
+    color: var(--text-color);
+    line-height: 1.6;
+}
+
+@media (prefers-color-scheme: dark) {
+    body {
+        background: var(--surface-bg-dark);
+        color: var(--text-color-dark);
+    }
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+thead {
+    background: rgba(37, 99, 235, 0.08);
+}
+
+@media (prefers-color-scheme: dark) {
+    thead {
+        background: rgba(96, 165, 250, 0.12);
+    }
+}
+
+th,
+td {
+    border: 1px solid var(--border-color);
+    padding: 0.65rem 0.75rem;
+    text-align: left;
+    vertical-align: top;
+}
+
+@media (prefers-color-scheme: dark) {
+    th,
+    td {
+        border-color: var(--border-color-dark);
+    }
+}
+
+button,
+.button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.55rem 1.05rem;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    font-weight: 600;
+    font-size: 0.95rem;
+    background: var(--accent);
+    color: #fff;
+    cursor: pointer;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    text-decoration: none;
+}
+
+button:hover,
+.button:hover,
+button:focus-visible,
+.button:focus-visible {
+    background: var(--accent-hover);
+    box-shadow: 0 6px 14px rgba(37, 99, 235, 0.2);
+    transform: translateY(-1px);
+}
+
+@media (prefers-color-scheme: dark) {
+    button,
+    .button {
+        background: var(--accent-dark);
+        color: #0b1120;
+    }
+
+    button:hover,
+    .button:hover,
+    button:focus-visible,
+    .button:focus-visible {
+        background: var(--accent-dark-hover);
+        box-shadow: 0 6px 16px rgba(96, 165, 250, 0.25);
+    }
+}
+
+button:disabled,
+.button:disabled {
+    background: #94a3b8;
+    color: rgba(255, 255, 255, 0.8);
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
+input,
+select,
+textarea {
+    font-family: inherit;
+}
