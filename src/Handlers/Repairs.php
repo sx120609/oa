@@ -71,7 +71,7 @@ class Repairs
                 ':status' => 'under_repair',
                 ':updated_at' => $now,
                 ':id' => $assetId,
-                ':prev' => $asset['updated_at'],
+                ':prev' => $lockedAsset['updated_at'],
             ]);
 
             if ($updateAsset->rowCount() === 0) {
@@ -182,7 +182,7 @@ class Repairs
                 ':status' => 'closed',
                 ':updated_at' => $now,
                 ':id' => $id,
-                ':prev' => $order['updated_at'],
+                ':prev' => $lockedOrder['updated_at'],
             ]);
 
             if ($updateOrder->rowCount() === 0) {
@@ -194,7 +194,7 @@ class Repairs
                 ':status' => 'in_use',
                 ':updated_at' => $now,
                 ':id' => (int)$asset['id'],
-                ':prev' => $asset['updated_at'],
+                ':prev' => $lockedAsset['updated_at'],
             ]);
 
             if ($updateAsset->rowCount() === 0) {

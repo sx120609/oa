@@ -177,7 +177,7 @@ If the same `no` already exists for this asset assignment, the service returns t
 - `403 forbidden` – caller not `asset_admin`/`admin`.
 - `404 not_found` – asset missing.
 - `409 invalid_status` – asset not in `in_stock`/`in_use`.
-- `409 conflict` – optimistic lock failed; refetch the asset and retry.
+- `409 conflict` – optimistic lock failed; refetch the asset and retry with a new business `no`.
 - `422 validation_error` – missing `user_id`, `project_id`, or `no`.
 
 **cURL**
@@ -391,4 +391,4 @@ curl -s -X POST http://127.0.0.1:8000/assets/6/return \
 # => asset status resets to in_stock and logs a return usage
 ```
 
-> **Tip:** In parallel assignment attempts, a second request may receive `{ "error": "conflict" }`. Re-fetch the asset to obtain the latest `updated_at` and retry with a fresh operation if needed.
+> **Tip:** Parallel assignment attempts trigger the optimistic-lock guard. When `{ "error": "conflict" }` is returned, refresh the asset view, pick a new business `no`, and submit the assignment again.

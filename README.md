@@ -38,15 +38,16 @@ migrations/       # SQL migration files with schema and seed data
 ## Automated smoke check
 
 Run the bundled script to rebuild the schema, boot the built-in server, and exercise
-the health, asset creation, assignment, and return flows. The script exits non-zero if
-any command fails.
+the health, asset creation, assignment, return, and optimistic-lock conflict flows.
+The script exits non-zero if any command fails.
 
 ```bash
 scripts/check.sh
 ```
 
-By default it targets `http://127.0.0.1:8000` and uses the API key from the
-`API_KEY` environment variable (falling back to `devkey`).
+By default it targets `http://127.0.0.1:8000`, uses the API key from the
+`API_KEY` environment variable (falling back to `devkey`), and issues parallel
+assignment requests to confirm the idempotent and conflict paths.
 
 ## Container usage
 

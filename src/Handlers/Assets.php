@@ -46,19 +46,20 @@ class Assets
             return;
         }
 
-        $pdo = DB::pdo();
         $now = Util::now();
 
-        $statement = $pdo->prepare('INSERT INTO assets (name, model, status, created_at, updated_at) VALUES (:name, :model, :status, :created_at, :updated_at)');
-        $statement->execute([
-            ':name' => $name,
-            ':model' => $model !== null && $model !== '' ? $model : null,
-            ':status' => 'in_stock',
-            ':created_at' => $now,
-            ':updated_at' => $now,
-        ]);
+        $id = DB::tx(function (PDO $pdo) use ($name, $model, $now): int {
+            $statement = $pdo->prepare('INSERT INTO assets (name, model, status, created_at, updated_at) VALUES (:name, :model, :status, :created_at, :updated_at)');
+            $statement->execute([
+                ':name' => $name,
+                ':model' => $model !== null && $model !== '' ? $model : null,
+                ':status' => 'in_stock',
+                ':created_at' => $now,
+                ':updated_at' => $now,
+            ]);
 
-        $id = (int)$pdo->lastInsertId();
+            return (int)$pdo->lastInsertId();
+        });
 
         Http::json([
             'id' => $id,
@@ -124,37 +125,37 @@ class Assets
                     return ['error' => 'not_found'];
                 }
 
-            if ($lockedAsset['updated_at'] !== $asset['updated_at']) {
-                return ['error' => 'conflict'];
-            }
+                if ($lockedAsset['updated_at'] !== $asset['updated_at']) {
+                    return ['error' => 'conflict'];
+                }
 
-            if (!in_array($lockedAsset['status'], ['in_stock', 'in_use'], true)) {
-                return ['error' => 'invalid_status'];
-            }
+                if (!in_array($lockedAsset['status'], ['in_stock', 'in_use'], true)) {
+                    return ['error' => 'invalid_status'];
+                }
 
-            $updateAsset = $pdo->prepare('UPDATE assets SET status = :status, updated_at = :updated_at WHERE id = :id AND updated_at = :prev');
-            $updateAsset->execute([
-                ':status' => 'in_use',
-                ':updated_at' => $now,
-                ':id' => $id,
-                ':prev' => $asset['updated_at'],
-            ]);
+                $updateAsset = $pdo->prepare('UPDATE assets SET status = :status, updated_at = :updated_at WHERE id = :id AND updated_at = :prev');
+                $updateAsset->execute([
+                    ':status' => 'in_use',
+                    ':updated_at' => $now,
+                    ':id' => $id,
+                    ':prev' => $lockedAsset['updated_at'],
+                ]);
 
-            if ($updateAsset->rowCount() === 0) {
-                return ['error' => 'conflict'];
-            }
+                if ($updateAsset->rowCount() === 0) {
+                    return ['error' => 'conflict'];
+                }
 
-            $insertUsage = $pdo->prepare('INSERT INTO usages (asset_id, user_id, project_id, request_no, type, occurred_at) VALUES (:asset_id, :user_id, :project_id, :request_no, :type, :occurred_at)');
-            $insertUsage->execute([
-                ':asset_id' => $id,
-                ':user_id' => $userId,
-                ':project_id' => $projectId,
-                ':request_no' => $requestNo,
-                ':type' => 'assign',
-                ':occurred_at' => $now,
-            ]);
+                $insertUsage = $pdo->prepare('INSERT INTO usages (asset_id, user_id, project_id, request_no, type, occurred_at) VALUES (:asset_id, :user_id, :project_id, :request_no, :type, :occurred_at)');
+                $insertUsage->execute([
+                    ':asset_id' => $id,
+                    ':user_id' => $userId,
+                    ':project_id' => $projectId,
+                    ':request_no' => $requestNo,
+                    ':type' => 'assign',
+                    ':occurred_at' => $now,
+                ]);
 
-            self::insertAssetLog($pdo, $id, $lockedAsset['status'], 'in_use', 'assign', $requestNo, $now);
+                self::insertAssetLog($pdo, $id, $lockedAsset['status'], 'in_use', 'assign', $requestNo, $now);
 
                 return [
                     'usage_id' => (int)$pdo->lastInsertId(),
@@ -256,37 +257,37 @@ class Assets
                     return ['error' => 'not_found'];
                 }
 
-            if ($lockedAsset['updated_at'] !== $asset['updated_at']) {
-                return ['error' => 'conflict'];
-            }
+                if ($lockedAsset['updated_at'] !== $asset['updated_at']) {
+                    return ['error' => 'conflict'];
+                }
 
-            if ($lockedAsset['status'] !== 'in_use') {
-                return ['error' => 'invalid_status'];
-            }
+                if ($lockedAsset['status'] !== 'in_use') {
+                    return ['error' => 'invalid_status'];
+                }
 
-            $updateAsset = $pdo->prepare('UPDATE assets SET status = :status, updated_at = :updated_at WHERE id = :id AND updated_at = :prev');
-            $updateAsset->execute([
-                ':status' => 'in_stock',
-                ':updated_at' => $now,
-                ':id' => $id,
-                ':prev' => $asset['updated_at'],
-            ]);
+                $updateAsset = $pdo->prepare('UPDATE assets SET status = :status, updated_at = :updated_at WHERE id = :id AND updated_at = :prev');
+                $updateAsset->execute([
+                    ':status' => 'in_stock',
+                    ':updated_at' => $now,
+                    ':id' => $id,
+                    ':prev' => $lockedAsset['updated_at'],
+                ]);
 
-            if ($updateAsset->rowCount() === 0) {
-                return ['error' => 'conflict'];
-            }
+                if ($updateAsset->rowCount() === 0) {
+                    return ['error' => 'conflict'];
+                }
 
-            $insertUsage = $pdo->prepare('INSERT INTO usages (asset_id, user_id, project_id, request_no, type, occurred_at) VALUES (:asset_id, :user_id, :project_id, :request_no, :type, :occurred_at)');
-            $insertUsage->execute([
-                ':asset_id' => $id,
-                ':user_id' => $userId,
-                ':project_id' => $projectId,
-                ':request_no' => $requestNo,
-                ':type' => 'return',
-                ':occurred_at' => $now,
-            ]);
+                $insertUsage = $pdo->prepare('INSERT INTO usages (asset_id, user_id, project_id, request_no, type, occurred_at) VALUES (:asset_id, :user_id, :project_id, :request_no, :type, :occurred_at)');
+                $insertUsage->execute([
+                    ':asset_id' => $id,
+                    ':user_id' => $userId,
+                    ':project_id' => $projectId,
+                    ':request_no' => $requestNo,
+                    ':type' => 'return',
+                    ':occurred_at' => $now,
+                ]);
 
-            self::insertAssetLog($pdo, $id, $lockedAsset['status'], 'in_stock', 'return', $requestNo, $now);
+                self::insertAssetLog($pdo, $id, $lockedAsset['status'], 'in_stock', 'return', $requestNo, $now);
 
                 return [
                     'usage_id' => (int)$pdo->lastInsertId(),
