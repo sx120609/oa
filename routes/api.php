@@ -1,7 +1,10 @@
 <?php
 
 use App\Http\Controllers\DeviceLifecycleController;
+use App\Http\Controllers\HealthCheckController;
 use Illuminate\Support\Facades\Route;
+
+Route::get('/healthz', HealthCheckController::class)->name('healthz');
 
 Route::middleware('auth')->prefix('devices')->group(function () {
     Route::post('purchase', [DeviceLifecycleController::class, 'purchase']);
