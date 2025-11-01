@@ -1,4 +1,4 @@
-const API_BASE = '/api.php';
+const API_BASE = 'https://oaapi.lizmt.cn';
 
 const state = {
   apiKey: 'devkey',
