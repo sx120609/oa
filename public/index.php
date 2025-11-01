@@ -33,6 +33,7 @@ $router->add('GET', '/^\/repairs$/', [Repairs::class, 'index']);
 $router->add('POST', '/^\/repair-orders$/', [Repairs::class, 'store']);
 $router->add('POST', '/^\/repair-orders\/(\d+)\/close$/', [Repairs::class, 'close']);
 $router->add('GET', '/^\/reports\/summary$/', [Reports::class, 'summary']);
+$router->add('GET', '/^\/reports\/costs$/', [Reports::class, 'costs']);
 
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';

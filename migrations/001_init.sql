@@ -52,6 +52,8 @@ CREATE TABLE IF NOT EXISTS repair_orders (
     asset_id INT UNSIGNED NOT NULL,
     status VARCHAR(50) NOT NULL,
     description TEXT NULL,
+    labor_cost DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    parts_cost DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     created_at DATETIME NOT NULL,
     updated_at DATETIME NOT NULL,
     CONSTRAINT fk_repairs_asset FOREIGN KEY (asset_id) REFERENCES assets(id) ON DELETE CASCADE
@@ -76,5 +78,5 @@ INSERT INTO usages (asset_id, user_id, project_id, request_no, type, occurred_at
 INSERT INTO asset_logs (asset_id, from_status, to_status, action, request_id, created_at) VALUES
     (2, 'in_stock', 'in_use', 'assign', 'REQ-202309-001', CURRENT_TIMESTAMP);
 
-INSERT INTO repair_orders (asset_id, status, description, created_at, updated_at) VALUES
-    (2, 'created', 'Extruder calibration required', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO repair_orders (asset_id, status, description, labor_cost, parts_cost, created_at, updated_at) VALUES
+    (2, 'created', 'Extruder calibration required', 120.00, 45.50, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
