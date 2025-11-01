@@ -6,6 +6,7 @@ use App\DB;
 use App\Http;
 use App\Util;
 use PDO;
+use PDOException;
 
 class Assets
 {
@@ -86,7 +87,12 @@ class Assets
 
         $pdo = DB::pdo();
         $asset = self::findAsset($pdo, $id);
-        if (!$asset || !in_array($asset['status'], ['in_stock', 'in_use'], true)) {
+        if ($asset === null) {
+            Http::error('Asset not found', 404, 'not_found');
+            return;
+        }
+
+        if (!in_array($asset['status'], ['in_stock', 'in_use'], true)) {
             Http::error('Asset unavailable for assignment', 409, 'invalid_status');
             return;
         }
@@ -108,7 +114,33 @@ class Assets
 
         $now = Util::now();
 
-        DB::tx(function (PDO $pdo) use ($id, $userId, $projectId, $requestNo, $asset, $now): void {
+        try {
+            $result = DB::tx(function (PDO $pdo) use ($id, $userId, $projectId, $requestNo, $asset, $now) {
+                $lockedAsset = self::lockAsset($pdo, $id);
+                if ($lockedAsset === null) {
+                    return ['error' => 'not_found'];
+                }
+
+            if ($lockedAsset['updated_at'] !== $asset['updated_at']) {
+                return ['error' => 'conflict'];
+            }
+
+            if (!in_array($lockedAsset['status'], ['in_stock', 'in_use'], true)) {
+                return ['error' => 'invalid_status'];
+            }
+
+            $updateAsset = $pdo->prepare('UPDATE assets SET status = :status, updated_at = :updated_at WHERE id = :id AND updated_at = :prev');
+            $updateAsset->execute([
+                ':status' => 'in_use',
+                ':updated_at' => $now,
+                ':id' => $id,
+                ':prev' => $asset['updated_at'],
+            ]);
+
+            if ($updateAsset->rowCount() === 0) {
+                return ['error' => 'conflict'];
+            }
+
             $insertUsage = $pdo->prepare('INSERT INTO usages (asset_id, user_id, project_id, request_no, type, occurred_at) VALUES (:asset_id, :user_id, :project_id, :request_no, :type, :occurred_at)');
             $insertUsage->execute([
                 ':asset_id' => $id,
@@ -119,15 +151,46 @@ class Assets
                 ':occurred_at' => $now,
             ]);
 
-            $updateAsset = $pdo->prepare('UPDATE assets SET status = :status, updated_at = :updated_at WHERE id = :id');
-            $updateAsset->execute([
-                ':status' => 'in_use',
-                ':updated_at' => $now,
-                ':id' => $id,
-            ]);
+            self::insertAssetLog($pdo, $id, $lockedAsset['status'], 'in_use', 'assign', $requestNo, $now);
 
-            self::insertAssetLog($pdo, $id, $asset['status'], 'in_use', 'assign', $requestNo, $now);
-        });
+                return [
+                    'usage_id' => (int)$pdo->lastInsertId(),
+                ];
+            });
+        } catch (PDOException $exception) {
+            if ($exception->getCode() === '23000') {
+                $usage = self::findUsageByNo($pdo, $requestNo);
+                if ($usage !== null && (int)$usage['asset_id'] === $id && $usage['type'] === 'assign') {
+                    $freshAsset = self::findAsset($pdo, $id);
+                    Http::json([
+                        'asset' => $freshAsset,
+                        'usage' => $usage,
+                        'idempotent' => true,
+                    ]);
+                    return;
+                }
+
+                Http::error('Request number already used by another operation', 409, 'invalid_status');
+                return;
+            }
+
+            throw $exception;
+        }
+
+        if (isset($result['error'])) {
+            if ($result['error'] === 'conflict') {
+                Http::error('Asset state has changed, please retry', 409, 'conflict');
+                return;
+            }
+
+            if ($result['error'] === 'invalid_status') {
+                Http::error('Asset unavailable for assignment', 409, 'invalid_status');
+                return;
+            }
+
+            Http::error('Asset not found', 404, 'not_found');
+            return;
+        }
 
         $freshAsset = self::findAsset($pdo, $id);
         $usage = self::findUsageByNo($pdo, $requestNo);
@@ -154,7 +217,12 @@ class Assets
 
         $pdo = DB::pdo();
         $asset = self::findAsset($pdo, $id);
-        if (!$asset || $asset['status'] !== 'in_use') {
+        if ($asset === null) {
+            Http::error('Asset not found', 404, 'not_found');
+            return;
+        }
+
+        if ($asset['status'] !== 'in_use') {
             Http::error('Asset not in use', 409, 'invalid_status');
             return;
         }
@@ -176,7 +244,33 @@ class Assets
 
         $now = Util::now();
 
-        DB::tx(function (PDO $pdo) use ($id, $userId, $projectId, $requestNo, $asset, $now): void {
+        try {
+            $result = DB::tx(function (PDO $pdo) use ($id, $userId, $projectId, $requestNo, $asset, $now) {
+                $lockedAsset = self::lockAsset($pdo, $id);
+                if ($lockedAsset === null) {
+                    return ['error' => 'not_found'];
+                }
+
+            if ($lockedAsset['updated_at'] !== $asset['updated_at']) {
+                return ['error' => 'conflict'];
+            }
+
+            if ($lockedAsset['status'] !== 'in_use') {
+                return ['error' => 'invalid_status'];
+            }
+
+            $updateAsset = $pdo->prepare('UPDATE assets SET status = :status, updated_at = :updated_at WHERE id = :id AND updated_at = :prev');
+            $updateAsset->execute([
+                ':status' => 'in_stock',
+                ':updated_at' => $now,
+                ':id' => $id,
+                ':prev' => $asset['updated_at'],
+            ]);
+
+            if ($updateAsset->rowCount() === 0) {
+                return ['error' => 'conflict'];
+            }
+
             $insertUsage = $pdo->prepare('INSERT INTO usages (asset_id, user_id, project_id, request_no, type, occurred_at) VALUES (:asset_id, :user_id, :project_id, :request_no, :type, :occurred_at)');
             $insertUsage->execute([
                 ':asset_id' => $id,
@@ -187,15 +281,46 @@ class Assets
                 ':occurred_at' => $now,
             ]);
 
-            $updateAsset = $pdo->prepare('UPDATE assets SET status = :status, updated_at = :updated_at WHERE id = :id');
-            $updateAsset->execute([
-                ':status' => 'in_stock',
-                ':updated_at' => $now,
-                ':id' => $id,
-            ]);
+            self::insertAssetLog($pdo, $id, $lockedAsset['status'], 'in_stock', 'return', $requestNo, $now);
 
-            self::insertAssetLog($pdo, $id, $asset['status'], 'in_stock', 'return', $requestNo, $now);
-        });
+                return [
+                    'usage_id' => (int)$pdo->lastInsertId(),
+                ];
+            });
+        } catch (PDOException $exception) {
+            if ($exception->getCode() === '23000') {
+                $usage = self::findUsageByNo($pdo, $requestNo);
+                if ($usage !== null && (int)$usage['asset_id'] === $id && $usage['type'] === 'return') {
+                    $freshAsset = self::findAsset($pdo, $id);
+                    Http::json([
+                        'asset' => $freshAsset,
+                        'usage' => $usage,
+                        'idempotent' => true,
+                    ]);
+                    return;
+                }
+
+                Http::error('Request number already used by another operation', 409, 'invalid_status');
+                return;
+            }
+
+            throw $exception;
+        }
+
+        if (isset($result['error'])) {
+            if ($result['error'] === 'conflict') {
+                Http::error('Asset state has changed, please retry', 409, 'conflict');
+                return;
+            }
+
+            if ($result['error'] === 'invalid_status') {
+                Http::error('Asset not in use', 409, 'invalid_status');
+                return;
+            }
+
+            Http::error('Asset not found', 404, 'not_found');
+            return;
+        }
 
         $freshAsset = self::findAsset($pdo, $id);
         $usage = self::findUsageByNo($pdo, $requestNo);
@@ -210,6 +335,15 @@ class Assets
     private static function findAsset(PDO $pdo, int $assetId): ?array
     {
         $statement = $pdo->prepare('SELECT id, name, model, status, created_at, updated_at FROM assets WHERE id = :id');
+        $statement->execute([':id' => $assetId]);
+        $asset = $statement->fetch(PDO::FETCH_ASSOC);
+
+        return $asset === false ? null : $asset;
+    }
+
+    private static function lockAsset(PDO $pdo, int $assetId): ?array
+    {
+        $statement = $pdo->prepare('SELECT id, name, model, status, created_at, updated_at FROM assets WHERE id = :id FOR UPDATE');
         $statement->execute([':id' => $assetId]);
         $asset = $statement->fetch(PDO::FETCH_ASSOC);
 

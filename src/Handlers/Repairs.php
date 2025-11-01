@@ -41,7 +41,20 @@ class Repairs
 
         $now = Util::now();
 
-        $orderId = DB::tx(function (PDO $pdo) use ($assetId, $symptom, $asset, $now): int {
+        $result = DB::tx(function (PDO $pdo) use ($assetId, $symptom, $asset, $now) {
+            $lockedAsset = self::lockAsset($pdo, $assetId);
+            if ($lockedAsset === null) {
+                return ['error' => 'not_found'];
+            }
+
+            if ($lockedAsset['updated_at'] !== $asset['updated_at']) {
+                return ['error' => 'conflict'];
+            }
+
+            if ($lockedAsset['status'] !== 'in_use') {
+                return ['error' => 'invalid_status'];
+            }
+
             $insertOrder = $pdo->prepare('INSERT INTO repair_orders (asset_id, status, description, created_at, updated_at) VALUES (:asset_id, :status, :description, :created_at, :updated_at)');
             $insertOrder->execute([
                 ':asset_id' => $assetId,
@@ -53,25 +66,49 @@ class Repairs
 
             $newOrderId = (int)$pdo->lastInsertId();
 
-            $updateAsset = $pdo->prepare('UPDATE assets SET status = :status, updated_at = :updated_at WHERE id = :id');
+            $updateAsset = $pdo->prepare('UPDATE assets SET status = :status, updated_at = :updated_at WHERE id = :id AND updated_at = :prev');
             $updateAsset->execute([
                 ':status' => 'under_repair',
                 ':updated_at' => $now,
                 ':id' => $assetId,
+                ':prev' => $asset['updated_at'],
             ]);
+
+            if ($updateAsset->rowCount() === 0) {
+                return ['error' => 'conflict'];
+            }
 
             self::insertAssetLog(
                 $pdo,
                 $assetId,
-                $asset['status'],
+                $lockedAsset['status'],
                 'under_repair',
                 'repair_create',
                 (string)$newOrderId,
                 $now
             );
 
-            return $newOrderId;
+            return [
+                'order_id' => $newOrderId,
+            ];
         });
+
+        if (isset($result['error'])) {
+            if ($result['error'] === 'conflict') {
+                Http::error('Asset state has changed, please retry', 409, 'conflict');
+                return;
+            }
+
+            if ($result['error'] === 'invalid_status') {
+                Http::error('Asset status must be in_use before repair', 409, 'invalid_status');
+                return;
+            }
+
+            Http::error('Asset not found', 404, 'not_found');
+            return;
+        }
+
+        $orderId = $result['order_id'];
 
         $order = self::findOrder($pdo, $orderId);
 
@@ -113,31 +150,84 @@ class Repairs
 
         $now = Util::now();
 
-        DB::tx(function (PDO $pdo) use ($id, $asset, $now): void {
-            $updateOrder = $pdo->prepare('UPDATE repair_orders SET status = :status, updated_at = :updated_at WHERE id = :id');
+        $result = DB::tx(function (PDO $pdo) use ($id, $order, $asset, $now) {
+            $lockedOrder = self::lockOrder($pdo, $id);
+            if ($lockedOrder === null) {
+                return ['error' => 'not_found'];
+            }
+
+            if ($lockedOrder['updated_at'] !== $order['updated_at']) {
+                return ['error' => 'conflict'];
+            }
+
+            if (!in_array($lockedOrder['status'], ['created', 'repairing', 'qa'], true)) {
+                return ['error' => 'invalid_status'];
+            }
+
+            $lockedAsset = self::lockAsset($pdo, (int)$asset['id']);
+            if ($lockedAsset === null) {
+                return ['error' => 'not_found'];
+            }
+
+            if ($lockedAsset['updated_at'] !== $asset['updated_at']) {
+                return ['error' => 'conflict'];
+            }
+
+            if ($lockedAsset['status'] !== 'under_repair') {
+                return ['error' => 'invalid_status'];
+            }
+
+            $updateOrder = $pdo->prepare('UPDATE repair_orders SET status = :status, updated_at = :updated_at WHERE id = :id AND updated_at = :prev');
             $updateOrder->execute([
                 ':status' => 'closed',
                 ':updated_at' => $now,
                 ':id' => $id,
+                ':prev' => $order['updated_at'],
             ]);
 
-            $updateAsset = $pdo->prepare('UPDATE assets SET status = :status, updated_at = :updated_at WHERE id = :id');
+            if ($updateOrder->rowCount() === 0) {
+                return ['error' => 'conflict'];
+            }
+
+            $updateAsset = $pdo->prepare('UPDATE assets SET status = :status, updated_at = :updated_at WHERE id = :id AND updated_at = :prev');
             $updateAsset->execute([
                 ':status' => 'in_use',
                 ':updated_at' => $now,
                 ':id' => (int)$asset['id'],
+                ':prev' => $asset['updated_at'],
             ]);
+
+            if ($updateAsset->rowCount() === 0) {
+                return ['error' => 'conflict'];
+            }
 
             self::insertAssetLog(
                 $pdo,
                 (int)$asset['id'],
-                $asset['status'],
+                $lockedAsset['status'],
                 'in_use',
                 'repair_close',
                 (string)$id,
                 $now
             );
+
+            return ['ok' => true];
         });
+
+        if (isset($result['error'])) {
+            if ($result['error'] === 'conflict') {
+                Http::error('Asset state has changed, please retry', 409, 'conflict');
+                return;
+            }
+
+            if ($result['error'] === 'invalid_status') {
+                Http::error('Repair order cannot be closed from current status', 409, 'invalid_status');
+                return;
+            }
+
+            Http::error('Repair order not found', 404, 'not_found');
+            return;
+        }
 
         $order = self::findOrder($pdo, $id);
 
@@ -158,6 +248,24 @@ class Repairs
     private static function findOrder(PDO $pdo, int $orderId): ?array
     {
         $statement = $pdo->prepare('SELECT id, asset_id, status, description, created_at, updated_at FROM repair_orders WHERE id = :id');
+        $statement->execute([':id' => $orderId]);
+        $order = $statement->fetch(PDO::FETCH_ASSOC);
+
+        return $order === false ? null : $order;
+    }
+
+    private static function lockAsset(PDO $pdo, int $assetId): ?array
+    {
+        $statement = $pdo->prepare('SELECT id, name, model, status, created_at, updated_at FROM assets WHERE id = :id FOR UPDATE');
+        $statement->execute([':id' => $assetId]);
+        $asset = $statement->fetch(PDO::FETCH_ASSOC);
+
+        return $asset === false ? null : $asset;
+    }
+
+    private static function lockOrder(PDO $pdo, int $orderId): ?array
+    {
+        $statement = $pdo->prepare('SELECT id, asset_id, status, description, created_at, updated_at FROM repair_orders WHERE id = :id FOR UPDATE');
         $statement->execute([':id' => $orderId]);
         $order = $statement->fetch(PDO::FETCH_ASSOC);
 
