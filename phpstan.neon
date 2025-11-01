@@ -1,0 +1,13 @@
+includes:
+  - vendor/nunomaduro/larastan/extension.neon
+
+parameters:
+  level: max
+  paths:
+    - app
+    - database
+    - routes
+    - tests
+  tmpDir: storage/app/phpstan
+  parallel:
+    maximumNumberOfProcesses: 0
