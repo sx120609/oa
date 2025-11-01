@@ -1,4 +1,12 @@
 -- Schema definitions
+
+-- Reset tables so the migration is idempotent when rerun
+DROP TABLE IF EXISTS repair_orders;
+DROP TABLE IF EXISTS asset_logs;
+DROP TABLE IF EXISTS usages;
+DROP TABLE IF EXISTS assets;
+DROP TABLE IF EXISTS projects;
+DROP TABLE IF EXISTS users;
 CREATE TABLE IF NOT EXISTS users (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
