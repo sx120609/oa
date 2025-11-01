@@ -1,7 +1,6 @@
-const API_BASE = '';
+const API_BASE = '/api.php';
 
 const state = {
-  baseUrl: API_BASE,
   apiKey: 'devkey',
   userId: '1',
 };
@@ -42,13 +41,11 @@ function initialiseConfig() {
     return;
   }
 
-  configForm.baseUrl.value = state.baseUrl;
   configForm.apiKey.value = state.apiKey;
   configForm.userId.value = state.userId;
 
   configForm.addEventListener('submit', (event) => {
     event.preventDefault();
-    state.baseUrl = configForm.baseUrl.value.trim();
     state.apiKey = configForm.apiKey.value.trim() || 'devkey';
     state.userId = configForm.userId.value.trim();
     showNotice('success', '接口配置已更新');
@@ -110,39 +107,9 @@ function clearNotice() {
   alerts.innerHTML = '';
 }
 
-function currentBaseUrl() {
-  const base = state.baseUrl.trim();
-  if (base) {
-    return removeTrailingSlash(base);
-  }
-
-  if (API_BASE) {
-    return removeTrailingSlash(API_BASE);
-  }
-
-  return '';
-}
-
-function removeTrailingSlash(value) {
-  if (value.endsWith('/')) {
-    return value.slice(0, -1);
-  }
-  return value;
-}
-
 function buildApiUrl(path) {
-  const base = currentBaseUrl();
   const normalisedPath = path.startsWith('/') ? path : `/${path}`;
-
-  if (!base) {
-    return `/api.php${normalisedPath}`;
-  }
-
-  if (base.endsWith('.php')) {
-    return `${base}${normalisedPath}`;
-  }
-
-  return `${base}/api.php${normalisedPath}`;
+  return `${API_BASE}${normalisedPath}`;
 }
 
 async function fetchJson(path, method = 'GET', body) {

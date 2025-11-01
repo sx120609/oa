@@ -17,10 +17,6 @@
         <h2>Connection Settings</h2>
         <form id="config-form" class="form-grid">
             <label>
-                API Base URL
-                <input type="text" id="api-base" name="api_base" placeholder="http://127.0.0.1:8000" value="">
-            </label>
-            <label>
                 X-Api-Key
                 <input type="text" id="api-key" name="api_key" placeholder="devkey" value="devkey" required>
             </label>
@@ -30,7 +26,7 @@
             </label>
             <button type="submit">Apply</button>
         </form>
-        <p class="hint">Leave API Base URL blank when serving the frontend from the same host; requests will automatically target <code>/api.php</code>.</p>
+        <p class="hint">所有请求都会定向到当前站点的 <code>/api.php</code>，并附带上方的认证信息。</p>
     </section>
 
     <section class="card">

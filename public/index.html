@@ -25,10 +25,6 @@
             <h2>接口配置</h2>
             <form id="config-form" class="form-inline">
                 <label>
-                    后端地址
-                    <input type="text" name="baseUrl" placeholder="例如 http://127.0.0.1:8000" />
-                </label>
-                <label>
                     X-Api-Key
                     <input type="text" name="apiKey" placeholder="devkey" />
                 </label>
@@ -38,7 +34,7 @@
                 </label>
                 <button type="submit">保存</button>
             </form>
-            <p class="help-text">所有 Fetch 请求都会附带上方的认证参数；留空后端地址时默认当前站点并自动拼接 <code>/api.php</code>。</p>
+            <p class="help-text">所有请求都会定向到当前站点的 <code>/api.php</code>，并附带上方的认证参数。</p>
         </section>
 
         <section id="alerts" class="alerts" aria-live="polite"></section>

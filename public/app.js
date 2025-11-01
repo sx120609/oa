@@ -1,6 +1,6 @@
 (function () {
+    const API_BASE = '/api.php';
     const state = {
-        baseUrl: '',
         apiKey: 'devkey',
         userId: null,
     };
@@ -8,35 +8,14 @@
     const consoleEl = document.getElementById('console');
     const assetsTableBody = document.querySelector('#assets-table tbody');
 
-    function normaliseBase(base) {
-        if (!base || base === '/') {
-            return '';
-        }
-        return base.endsWith('/') ? base.slice(0, -1) : base;
-    }
-
     function buildUrl(path) {
         if (path.startsWith('http://') || path.startsWith('https://')) {
             return path;
         }
 
-        const base = normaliseBase(state.baseUrl);
-        const prefix = resolveApiPrefix(base);
         const normalisedPath = path.startsWith('/') ? path : `/${path}`;
 
-        return `${prefix}${normalisedPath}`;
-    }
-
-    function resolveApiPrefix(base) {
-        if (!base || base === '') {
-            return '/api.php';
-        }
-
-        if (base.endsWith('.php')) {
-            return base;
-        }
-
-        return `${base}/api.php`;
+        return `${API_BASE}${normalisedPath}`;
     }
 
     function logMessage(message, payload) {
@@ -160,14 +139,13 @@
         event.preventDefault();
         const form = event.currentTarget;
         const formData = new FormData(form);
-        state.baseUrl = (formData.get('api_base') || '').toString().trim();
         state.apiKey = (formData.get('api_key') || '').toString().trim();
         const userIdRaw = (formData.get('user_id') || '').toString().trim();
         state.userId = userIdRaw === '' ? null : userIdRaw;
         logMessage('Configuration updated', {
-            baseUrl: state.baseUrl,
             apiKeyPreview: state.apiKey ? `${state.apiKey.slice(0, 2)}***` : null,
             userId: state.userId,
+            endpoint: `${API_BASE}/*`,
         });
     });
 
