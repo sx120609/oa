@@ -15,13 +15,11 @@ CREATE TABLE IF NOT EXISTS projects (
 
 CREATE TABLE IF NOT EXISTS assets (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    project_id INT UNSIGNED NOT NULL,
     name VARCHAR(150) NOT NULL,
-    serial_number VARCHAR(120) UNIQUE,
+    model VARCHAR(120) NULL,
     status VARCHAR(50) NOT NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_assets_project FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS usages (
@@ -66,9 +64,9 @@ INSERT INTO projects (name, code) VALUES
     ('Office Expansion', 'OFF-001'),
     ('R&D Refresh', 'RND-002');
 
-INSERT INTO assets (project_id, name, serial_number, status, created_at, updated_at) VALUES
-    (1, 'Dell Latitude 7440', 'DL7440-001', 'in_stock', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (2, '3D Printer Mark II', 'PRNT-3D-002', 'in_use', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO assets (name, model, status, created_at, updated_at) VALUES
+    ('Dell Latitude 7440', '7440', 'in_stock', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('3D Printer Mark II', 'Mark II', 'in_use', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 INSERT INTO usages (asset_id, user_id, request_no, assigned_at, note) VALUES
     (2, 1, 'REQ-202309-001', CURRENT_TIMESTAMP, 'Initial assignment to Alice');
