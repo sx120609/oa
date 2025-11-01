@@ -94,33 +94,18 @@ class DB
             return;
         }
 
-        $driver = $config['driver'] ?? 'sqlite';
-
         try {
-            if ($driver === 'mysql') {
-                $dsn = sprintf(
-                    'mysql:host=%s;port=%s;dbname=%s;charset=%s',
-                    $config['mysql']['host'],
-                    $config['mysql']['port'],
-                    $config['mysql']['database'],
-                    $config['mysql']['charset']
-                );
-                self::$pdo = new PDO($dsn, $config['mysql']['username'], $config['mysql']['password'], [
-                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                ]);
-            } else {
-                $databaseFile = $config['sqlite']['database'];
-                $directory = dirname($databaseFile);
-                if (!is_dir($directory)) {
-                    mkdir($directory, 0755, true);
-                }
-                self::$pdo = new PDO('sqlite:' . $databaseFile, null, null, [
-                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                ]);
-                self::$pdo->exec('PRAGMA foreign_keys = ON');
-            }
+            $dsn = sprintf(
+                'mysql:host=%s;port=%s;dbname=%s;charset=%s',
+                $config['host'],
+                $config['port'],
+                $config['database'],
+                $config['charset']
+            );
+            self::$pdo = new PDO($dsn, $config['username'], $config['password'], [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            ]);
         } catch (PDOException $exception) {
             throw new RuntimeException('Database connection failed: ' . $exception->getMessage(), 0, $exception);
         }

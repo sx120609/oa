@@ -2,7 +2,7 @@
 
 ## 架构与运行时
 - 使用 **无框架** 原生 PHP 实现，所有请求经 `public/index.php` 单入口调度。
-- 依赖 PDO 扩展，默认数据库为 SQLite（`storage/database.sqlite`），通过环境变量可切换至 MySQL。
+- 依赖 PDO 扩展，数据库仅支持 MySQL 连接（通过环境变量配置）。
 - 统一使用 `config.php` 管理数据库及认证参数。
 
 ## 认证与安全

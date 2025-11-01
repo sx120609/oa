@@ -3,7 +3,7 @@
 ## 1. 资产模型
 - **资产 (assets)**：记录设备名称、序列号、当前状态及领用人。
 - 状态机：`in_stock` → `in_use` → `in_stock`，或在任一状态进入 `under_repair`。
-- 默认使用 SQLite 存储，可通过环境变量切换 MySQL。
+- 仅支持使用 MySQL 存储，通过环境变量配置连接信息。
 
 ## 2. 领用与归还
 - **领用**：`POST /assets/{id}/assign`
@@ -35,7 +35,7 @@
 - 资产列表：`GET /assets?status=in_stock` 按状态筛选库存设备。
 - 维修跟踪：结合 `repair_orders` 与 `asset_logs` 分析维修耗时。
 - 领用审计：通过 `asset_logs` 及 `asset_assignments` 追溯设备领用历史。
-- 合规报表：定期导出 SQLite/MySQL 数据生成资产台账。
+- 合规报表：定期导出 MySQL 数据生成资产台账。
 
 ## 5. 认证与接入
 - 所有 API 请求需携带 `X-Api-Key: devkey`（可配置）。
@@ -43,7 +43,7 @@
   ```bash
   php -S 0.0.0.0:8000 -t public
   ```
-- 切换至 MySQL 时需设置 `DB_DRIVER=mysql` 及连接信息。
+- 需设置 `DB_HOST`、`DB_PORT`、`DB_DATABASE`、`DB_USERNAME`、`DB_PASSWORD`、`DB_CHARSET` 以连接 MySQL。
 
 ## 6. 错误处理
 | HTTP 状态 | `code` 字段           | 说明                           |

@@ -9,21 +9,19 @@ public/           # Web root containing single entry point and optional rewrite 
 src/              # Configuration, bootstrap logic, helper utilities, and request handlers
 scripts/          # CLI scripts such as database initialisation
 migrations/       # SQL migration files with schema and seed data
-storage/          # Default location for SQLite database file (created on demand)
 ```
 
 ## Requirements
 
 - PHP 8.1+
-- SQLite (default) or MySQL 8+
+- MySQL 8+ with PDO MySQL extension
 
 ## Getting started
 
 1. **Install dependencies** – none required beyond PHP and PDO extensions.
 2. **Configure environment (optional)** – set environment variables to override defaults:
    - `API_KEY` (default `devkey`)
-   - `DB_DRIVER` (`sqlite` or `mysql`, default `sqlite`)
-   - `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`, `DB_CHARSET` (for MySQL)
+   - `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`, `DB_CHARSET`
 3. **Initialise the database**:
    ```bash
    php scripts/init_db.php
