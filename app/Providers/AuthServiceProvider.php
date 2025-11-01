@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Models\Asset;
 use App\Models\Device;
+use App\Policies\AssetPolicy;
 use App\Policies\DevicePolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
@@ -15,6 +17,7 @@ class AuthServiceProvider extends ServiceProvider
      */
     protected $policies = [
         Device::class => DevicePolicy::class,
+        Asset::class => AssetPolicy::class,
     ];
 
     /**
