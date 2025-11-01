@@ -35,6 +35,17 @@ migrations/       # SQL migration files with schema and seed data
    curl -H "X-Api-Key: devkey" http://127.0.0.1:8000/assets
    ```
 
+## Frontend usage
+
+Use the bundled static UI to interact with the API without additional tooling:
+
+1. Start the built-in PHP server:
+   ```bash
+   php -S 0.0.0.0:8000 -t public
+   ```
+2. Open a browser at [http://localhost:8000](http://localhost:8000).
+3. Use the navigation to create assets and review the reports pages rendered by the frontend.
+
 ## Automated smoke check
 
 Run the bundled script to rebuild the schema, boot the built-in server, and exercise
