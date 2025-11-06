@@ -1,0 +1,2 @@
+<?php
+// Enumeration definitions placeholder.

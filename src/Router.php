@@ -1,0 +1,2 @@
+<?php
+// Lightweight router placeholder.
