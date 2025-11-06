@@ -11,12 +11,12 @@ final class ExtensionController extends Controller
     public function request(): string
     {
         // TODO: Implement extension request workflow (photographer applies for due date extension).
-        return Response::error('not implemented', 501);
+        return Response::error('功能未实现', 501);
     }
 
     public function approve(): string
     {
         // TODO: Implement extension approval workflow (device admin updates checkouts.due_at).
-        return Response::error('not implemented', 501);
+        return Response::error('功能未实现', 501);
     }
 }

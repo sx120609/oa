@@ -37,7 +37,7 @@ if (!defined('UPLOAD_ROOT')) {
 }
 
 if (!is_dir(UPLOAD_ROOT) && !mkdir(UPLOAD_ROOT, 0775, true) && !is_dir(UPLOAD_ROOT)) {
-    echo Response::error('Storage directory unavailable', 500);
+    echo Response::error('上传目录不可用', 500);
     return;
 }
 
@@ -58,7 +58,7 @@ $router->post('/extensions/approve', 'ExtensionController@approve');
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
 if ($method === 'POST' && !verify_csrf_token($_POST['_token'] ?? null)) {
-    echo Response::error('Invalid CSRF token', 419);
+    echo Response::error('CSRF 校验失败', 419);
     return;
 }
 
@@ -83,12 +83,12 @@ try {
         $_SERVER['REQUEST_URI'] ?? '/',
         $exception->getMessage()
     ));
-    echo Response::error('Internal server error', 500);
+    echo Response::error('服务器内部错误', 500);
     return;
 }
 
 if ($response === null) {
-    echo Response::error('Not Found', 404);
+    echo Response::error('资源不存在', 404);
     return;
 }
 
@@ -103,9 +103,9 @@ if (is_array($response)) {
         echo json_encode($response, JSON_THROW_ON_ERROR);
     } catch (\JsonException $exception) {
         error_log($exception->getMessage());
-        echo Response::error('Invalid response payload', 500);
+        echo Response::error('响应数据编码失败', 500);
     }
     return;
 }
 
-echo Response::error('Unsupported response type', 500);
+echo Response::error('不支持的响应类型', 500);

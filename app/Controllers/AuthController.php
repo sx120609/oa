@@ -18,16 +18,16 @@ final class AuthController extends Controller
         $password = $this->requireString('password');
 
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            throw new HttpException('Invalid credentials', 401);
+            throw new HttpException('账号或密码错误', 401);
         }
 
         $user = $this->findUserByEmail($email);
         if ($user === null) {
-            throw new HttpException('Invalid credentials', 401);
+            throw new HttpException('账号或密码错误', 401);
         }
 
         if (!password_verify($password, $user['password_hash'])) {
-            throw new HttpException('Invalid credentials', 401);
+            throw new HttpException('账号或密码错误', 401);
         }
 
         session_regenerate_id(true);

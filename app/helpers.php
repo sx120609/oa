@@ -85,6 +85,6 @@ function verify_csrf_token(?string $token): bool
 function require_csrf_token(?string $token): void
 {
     if (!verify_csrf_token($token)) {
-        throw new HttpException('Invalid CSRF token', 419);
+        throw new HttpException('CSRF 校验失败', 419);
     }
 }

@@ -75,7 +75,7 @@ final class Router
     {
         $segments = explode('@', $handler, 2);
         if (count($segments) !== 2) {
-            throw new HttpException('Invalid route handler definition', 500);
+            throw new HttpException('路由处理器定义不正确', 500);
         }
 
         [$class, $method] = $segments;
@@ -84,12 +84,12 @@ final class Router
         }
 
         if (!class_exists($class)) {
-            throw new HttpException(sprintf('Route handler class "%s" not found', $class), 500);
+            throw new HttpException(sprintf('未找到路由处理类 %s', $class), 500);
         }
 
         $controller = new $class();
         if (!is_callable([$controller, $method])) {
-            throw new HttpException(sprintf('Route handler method "%s" not found on %s', $method, $class), 500);
+            throw new HttpException(sprintf('未找到路由方法 %s::%s', $class, $method), 500);
         }
 
         return $controller->{$method}();

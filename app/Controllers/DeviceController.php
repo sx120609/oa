@@ -29,7 +29,7 @@ final class DeviceController extends Controller
             $existsStmt = $pdo->prepare('SELECT id FROM devices WHERE code = :code LIMIT 1');
             $existsStmt->execute([':code' => $code]);
             if ($existsStmt->fetchColumn()) {
-                throw new HttpException('code exists', 409);
+                throw new HttpException('设备编号已存在', 409);
             }
 
             $stmt = $pdo->prepare(
@@ -49,7 +49,7 @@ final class DeviceController extends Controller
         } catch (HttpException $exception) {
             throw $exception;
         } catch (PDOException $exception) {
-            throw new HttpException('Unable to create device', 500, $exception);
+            throw new HttpException('设备创建失败', 500, $exception);
         }
 
         AuditLogger::log(

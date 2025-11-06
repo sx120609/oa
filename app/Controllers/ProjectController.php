@@ -23,7 +23,7 @@ final class ProjectController extends Controller
         $dueAt = $this->timestampFromPost('due_at');
 
         if ($startsAt !== null && $dueAt !== null && $startsAt > $dueAt) {
-            throw new HttpException('time invalid', 409);
+            throw new HttpException('时间范围不合法', 409);
         }
 
         $quoteAmount = $this->decimalFromPost('quote_amount', 0.0);
@@ -53,7 +53,7 @@ final class ProjectController extends Controller
 
             $projectId = (int) $pdo->lastInsertId();
         } catch (PDOException $exception) {
-            throw new HttpException('Unable to create project', 500, $exception);
+            throw new HttpException('项目创建失败', 500, $exception);
         }
 
         AuditLogger::log(
