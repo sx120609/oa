@@ -26,7 +26,7 @@ abstract class Controller
     {
         $actorId = $this->actorId();
         if ($actorId === null || $actorId <= 0) {
-            throw new HttpException('Unauthorized', 401);
+            throw new HttpException('未登录或无权限', 401);
         }
 
         return $actorId;
@@ -36,7 +36,7 @@ abstract class Controller
     {
         $value = trim((string) ($_POST[$key] ?? ''));
         if ($value === '') {
-            throw new HttpException(sprintf('Missing %s', $key), 409);
+            throw new HttpException(sprintf('缺少字段 %s', $key), 409);
         }
 
         return $value;
@@ -56,7 +56,7 @@ abstract class Controller
         ]);
 
         if ($value === false) {
-            throw new HttpException(sprintf('Invalid %s', $key), 409);
+            throw new HttpException(sprintf('字段 %s 不合法', $key), 409);
         }
 
         return (int) $value;
@@ -74,7 +74,7 @@ abstract class Controller
         ]);
 
         if ($value === false) {
-            throw new HttpException(sprintf('Invalid %s', $key), 409);
+            throw new HttpException(sprintf('字段 %s 不合法', $key), 409);
         }
 
         return (int) $value;
@@ -90,7 +90,7 @@ abstract class Controller
 
         $timestamp = strtotime($value);
         if ($timestamp === false) {
-            throw new HttpException(sprintf('Invalid %s', $key), 409);
+            throw new HttpException(sprintf('字段 %s 不合法', $key), 409);
         }
 
         return $timestamp;
@@ -105,7 +105,7 @@ abstract class Controller
 
         $value = filter_var($raw, FILTER_VALIDATE_FLOAT);
         if ($value === false) {
-            throw new HttpException(sprintf('Invalid %s', $key), 409);
+            throw new HttpException(sprintf('字段 %s 不合法', $key), 409);
         }
 
         return (float) $value;
@@ -116,7 +116,7 @@ abstract class Controller
         try {
             return random_int(1, 2_147_483_647);
         } catch (Throwable $exception) {
-            throw new HttpException('Unable to generate identifier', 500, $exception);
+            throw new HttpException('无法生成标识符', 500, $exception);
         }
     }
 }

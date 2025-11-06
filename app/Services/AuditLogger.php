@@ -21,7 +21,7 @@ final class AuditLogger
         try {
             $json = json_encode($detail, JSON_THROW_ON_ERROR);
         } catch (JsonException $e) {
-            throw new HttpException('Unable to encode audit payload', 500, $e);
+            throw new HttpException('审计日志编码失败', 500, $e);
         }
 
         try {
@@ -39,7 +39,7 @@ final class AuditLogger
                 ':detail' => $json,
             ]);
         } catch (PDOException $e) {
-            throw new HttpException('Failed to write audit log', 500, $e);
+            throw new HttpException('写入审计日志失败', 500, $e);
         }
     }
 }

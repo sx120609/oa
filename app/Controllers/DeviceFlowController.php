@@ -23,7 +23,7 @@ final class DeviceFlowController extends Controller
         $reservedTo = $this->timestampFromPost('to');
 
         if ($reservedFrom !== null && $reservedTo !== null && $reservedFrom >= $reservedTo) {
-            throw new HttpException('time invalid', 409);
+            throw new HttpException('时间范围不合法', 409);
         }
 
         $fromValue = date('Y-m-d H:i:s', $reservedFrom);
@@ -51,7 +51,7 @@ final class DeviceFlowController extends Controller
 
             if ($reservationConflict->fetchColumn()) {
                 $pdo->rollBack();
-                throw new HttpException('device not available in window', 409);
+                throw new HttpException('所选时间段设备不可用', 409);
             }
 
             $checkoutConflict = $pdo->prepare(
@@ -71,7 +71,7 @@ final class DeviceFlowController extends Controller
 
             if ($checkoutConflict->fetchColumn()) {
                 $pdo->rollBack();
-                throw new HttpException('device not available in window', 409);
+                throw new HttpException('所选时间段设备不可用', 409);
             }
 
             $insert = $pdo->prepare(
@@ -108,7 +108,7 @@ final class DeviceFlowController extends Controller
                 $pdo->rollBack();
             }
 
-            throw new HttpException('Unable to reserve device', 500, $exception);
+            throw new HttpException('设备预留失败', 500, $exception);
         }
 
         AuditLogger::log(
@@ -137,7 +137,7 @@ final class DeviceFlowController extends Controller
         $dueAt = $this->timestampFromPost('due');
 
         if ($checkedOutAt !== null && $dueAt !== null && $checkedOutAt >= $dueAt) {
-            throw new HttpException('time invalid', 409);
+            throw new HttpException('时间范围不合法', 409);
         }
 
         // TODO: Integrate penalty checks before allowing checkout (penalties table, rolling window).
@@ -160,7 +160,7 @@ final class DeviceFlowController extends Controller
 
             if ($currentStatus === false || !in_array($currentStatus, ['in_stock', 'reserved'], true)) {
                 $pdo->rollBack();
-                throw new HttpException('device not borrowable', 409);
+                throw new HttpException('设备当前不可借出', 409);
             }
 
             $insert = $pdo->prepare(
@@ -199,7 +199,7 @@ final class DeviceFlowController extends Controller
                 $pdo->rollBack();
             }
 
-            throw new HttpException('Unable to checkout device', 500, $exception);
+            throw new HttpException('设备借出失败', 500, $exception);
         }
 
         AuditLogger::log(
@@ -249,7 +249,7 @@ final class DeviceFlowController extends Controller
 
             if ($checkout === false) {
                 $pdo->rollBack();
-                throw new HttpException('no open checkout', 409);
+                throw new HttpException('未找到待归还的借用记录', 409);
             }
 
             $checkoutId = (int) $checkout['id'];
@@ -278,7 +278,7 @@ final class DeviceFlowController extends Controller
 
             if ($isOverdue) {
                 $body = sprintf(
-                    'Device %d returned at %s after due %s',
+                    '设备 %d 于 %s 归还，原定归还时间 %s，已超期。',
                     $deviceId,
                     $returnAtValue,
                     $dueAtValue
@@ -307,7 +307,7 @@ final class DeviceFlowController extends Controller
                 $pdo->rollBack();
             }
 
-            throw new HttpException('Unable to return device', 500, $exception);
+            throw new HttpException('设备归还失败', 500, $exception);
         }
 
         AuditLogger::log(
@@ -329,12 +329,12 @@ final class DeviceFlowController extends Controller
     public function transferRequest(): string
     {
         // TODO: Implement device transfer request flow (set status to transfer_pending and create transfer record).
-        return Response::error('not implemented', 501);
+        return Response::error('功能未实现', 501);
     }
 
     public function transferConfirm(): string
     {
         // TODO: Implement device transfer confirmation flow (revert status to checked_out and reset countdown policy).
-        return Response::error('not implemented', 501);
+        return Response::error('功能未实现', 501);
     }
 }

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title><?= escape('Page Not Found') ?></title>
+    <title><?= escape('页面不存在') ?></title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #111827; color: #e5e7eb; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
         main { text-align: center; padding: 3rem; background: rgba(17, 24, 39, 0.75); border-radius: 12px; box-shadow: 0 20px 45px rgba(0, 0, 0, 0.4); }
@@ -16,8 +16,8 @@
 <body>
     <main>
         <h1>404</h1>
-        <p>The page you are looking for could not be found.</p>
-        <p><a href="/">Return home</a></p>
+        <p>无法找到请求的页面。</p>
+        <p><a href="/">返回首页</a></p>
     </main>
 </body>
 </html>

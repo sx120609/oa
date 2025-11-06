@@ -2,11 +2,11 @@
 /** @var array $session */
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Asset PM Console</title>
+    <title>资产管理控制台</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; padding: 2rem; background: #f3f4f6; color: #111827; }
         main { max-width: 980px; margin: 0 auto; display: grid; gap: 1.5rem; }
@@ -27,166 +27,166 @@
 <body>
     <main>
         <section>
-            <h1>Asset PM Console</h1>
+            <h1>资产管理控制台</h1>
             <p class="status">
-                <strong>Status:</strong>
+                <strong>当前状态：</strong>
                 <?php if (!empty($session['uid'])): ?>
-                    Logged in as <?= escape($session['email'] ?? ('UID ' . $session['uid'])) ?> (role <?= escape($session['role'] ?? 'n/a') ?>)
+                    已登录，账号 <?= escape($session['email'] ?? ('UID ' . $session['uid'])) ?>（角色 <?= escape($session['role'] ?? '未知') ?>）
                 <?php else: ?>
-                    Not authenticated
+                    未登录
                 <?php endif; ?>
             </p>
         </section>
 
         <section>
-            <h2>Login</h2>
+            <h2>登录</h2>
             <form method="post" action="/login">
                 <?= csrf_field() ?>
                 <label>
-                    Email
+                    邮箱
                     <input type="email" name="email" required>
                 </label>
                 <label>
-                    Password
+                    密码
                     <input type="password" name="password" required>
                 </label>
-                <button type="submit">Login</button>
+                <button type="submit">登录</button>
             </form>
         </section>
 
         <section>
-            <h2>Create Project</h2>
+            <h2>创建项目</h2>
             <form method="post" action="/projects/create">
                 <?= csrf_field() ?>
                 <label>
-                    Name
+                    项目名称
                     <input type="text" name="name" required>
                 </label>
                 <label>
-                    Location
+                    项目地点
                     <input type="text" name="location" required>
                 </label>
                 <label>
-                    Starts At
+                    开始时间
                     <input type="datetime-local" name="starts_at" required>
                 </label>
                 <label>
-                    Due At
+                    交付时间
                     <input type="datetime-local" name="due_at" required>
                 </label>
                 <label>
-                    Quote Amount
+                    报价金额
                     <input type="number" step="0.01" name="quote_amount" value="0.00">
                 </label>
                 <label>
-                    Note
+                    备注
                     <textarea name="note"></textarea>
                 </label>
-                <button type="submit">Create Project</button>
+                <button type="submit">提交项目</button>
             </form>
         </section>
 
         <section>
-            <h2>Create Device</h2>
+            <h2>创建设备</h2>
             <form method="post" action="/devices/create">
                 <?= csrf_field() ?>
                 <label>
-                    Code
+                    设备编号
                     <input type="text" name="code" required>
                 </label>
                 <label>
-                    Model
+                    型号
                     <input type="text" name="model" required>
                 </label>
                 <label>
-                    Serial (optional)
+                    序列号（可选）
                     <input type="text" name="serial">
                 </label>
                 <label>
-                    Photo URL (optional)
+                    照片地址（可选）
                     <input type="url" name="photo_url">
                 </label>
-                <button type="submit">Create Device</button>
+                <button type="submit">提交设备</button>
             </form>
         </section>
 
         <section>
-            <h2>Reserve Device</h2>
+            <h2>设备预留</h2>
             <form method="post" action="/reservations/create">
                 <?= csrf_field() ?>
                 <label>
-                    Project ID
+                    项目 ID
                     <input type="number" name="project_id" min="1" required>
                 </label>
                 <label>
-                    Device ID
+                    设备 ID
                     <input type="number" name="device_id" min="1" required>
                 </label>
                 <label>
-                    From
+                    开始时间
                     <input type="datetime-local" name="from" required>
                 </label>
                 <label>
-                    To
+                    结束时间
                     <input type="datetime-local" name="to" required>
                 </label>
-                <button type="submit">Reserve</button>
+                <button type="submit">提交预留</button>
             </form>
         </section>
 
         <section>
-            <h2>Checkout Device</h2>
+            <h2>设备借用</h2>
             <form method="post" action="/checkouts/create">
                 <?= csrf_field() ?>
                 <label>
-                    Device ID
+                    设备 ID
                     <input type="number" name="device_id" min="1" required>
                 </label>
                 <label>
-                    Project ID (optional)
+                    项目 ID（可选）
                     <input type="number" name="project_id" min="1">
                 </label>
                 <label>
-                    Checkout Time
+                    借出时间
                     <input type="datetime-local" name="now" required>
                 </label>
                 <label>
-                    Due Time
+                    归还期限
                     <input type="datetime-local" name="due" required>
                 </label>
                 <label>
-                    Checkout Photo (optional)
+                    借出照片（可选）
                     <input type="url" name="photo">
                 </label>
                 <label>
-                    Note (optional)
+                    备注（可选）
                     <textarea name="note"></textarea>
                 </label>
-                <button type="submit">Checkout</button>
+                <button type="submit">提交借出</button>
             </form>
         </section>
 
         <section>
-            <h2>Return Device</h2>
+            <h2>设备归还</h2>
             <form method="post" action="/returns/create">
                 <?= csrf_field() ?>
                 <label>
-                    Device ID
+                    设备 ID
                     <input type="number" name="device_id" min="1" required>
                 </label>
                 <label>
-                    Return Time
+                    归还时间
                     <input type="datetime-local" name="now" required>
                 </label>
                 <label>
-                    Return Photo (optional)
+                    归还照片（可选）
                     <input type="url" name="photo">
                 </label>
                 <label>
-                    Note (optional)
+                    备注（可选）
                     <textarea name="note"></textarea>
                 </label>
-                <button type="submit">Return</button>
+                <button type="submit">提交归还</button>
             </form>
         </section>
     </main>

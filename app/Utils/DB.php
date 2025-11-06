@@ -36,7 +36,7 @@ final class DB
                 PDO::ATTR_EMULATE_PREPARES => false,
             ]);
         } catch (PDOException $e) {
-            throw new RuntimeException('Unable to connect to the database.', 0, $e);
+            throw new RuntimeException('无法连接数据库。', 0, $e);
         }
 
         self::$instance = $pdo;
