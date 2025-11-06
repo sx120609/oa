@@ -27,6 +27,8 @@ final class HomeController extends Controller
             'notifications' => [],
         ];
 
+        $loadError = null;
+
         try {
             $pdo = DB::connection();
             $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
@@ -68,12 +70,14 @@ final class HomeController extends Controller
                  LIMIT 10'
             )->fetchAll() ?: [];
         } catch (PDOException $exception) {
+            $loadError = $exception->getMessage();
             error_log('Dashboard data load failed: ' . $exception->getMessage());
         }
 
         return view('home', [
             'session' => $session,
             'data' => $summary,
+            'loadError' => $loadError,
         ]);
     }
 }

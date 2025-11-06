@@ -1,8 +1,10 @@
 <?php
 /** @var array $session */
 /** @var array|null $data */
+/** @var string|null $loadError */
 
 $data = $data ?? [];
+$loadError = $loadError ?? null;
 $projects = $data['projects'] ?? [];
 $devices = $data['devices'] ?? [];
 $reservations = $data['reservations'] ?? [];
@@ -410,17 +412,22 @@ $modulesInfo = [
             <div class="dashboard-main">
                 <section class="glass-card">
                     <div class="status-banner">
-                        <div class="status-info" data-current-status>
-                            <span>登录状态：</span>
-                            <?php if (!empty($session['uid'])): ?>
-                                <strong>已登录</strong> · 账号 <?= escape($session['email'] ?? ('UID ' . $session['uid'])) ?>（角色 <?= escape($session['role'] ?? '未知') ?>）
-                            <?php else: ?>
-                                <strong>未登录</strong> · 请在右侧完成登录
-                            <?php endif; ?>
-                        </div>
-                        <button type="button" class="refresh-btn" onclick="window.dashboardRefresh && window.dashboardRefresh(true)">刷新数据</button>
-                    </div>
-                    <div class="stats-grid">
+                <div class="status-info" data-current-status>
+                    <span>登录状态：</span>
+                    <?php if (!empty($session['uid'])): ?>
+                        <strong>已登录</strong> · 账号 <?= escape($session['email'] ?? ('UID ' . $session['uid'])) ?>（角色 <?= escape($session['role'] ?? '未知') ?>）
+                    <?php else: ?>
+                        <strong>未登录</strong> · 请在右侧完成登录
+                    <?php endif; ?>
+                </div>
+                <button type="button" class="refresh-btn" onclick="window.dashboardRefresh && window.dashboardRefresh(true)">刷新数据</button>
+            </div>
+            <?php if ($loadError): ?>
+                <div class="form-result show error" style="margin-top:1rem;">
+                    数据加载出现异常：<?= escape($loadError) ?>
+                </div>
+            <?php endif; ?>
+            <div class="stats-grid">
                         <div class="stat-card">
                             <h3>项目总览</h3>
                             <strong><?= escape((string) count($projects)) ?></strong>
