@@ -233,8 +233,12 @@
                     <h4>创建预留</h4>
                     <form method="post" action="/reservations/create" data-ajax="true">
                         <?= csrf_field() ?>
-                        <label>项目 ID<input type="number" name="project_id" min="1" required></label>
-                        <label>设备 ID<input type="number" name="device_id" min="1" required></label>
+                        <label>项目
+                            <select name="project_id" data-select="projects" data-placeholder="请选择项目" required></select>
+                        </label>
+                        <label>设备
+                            <select name="device_id" data-select="devices" data-placeholder="请选择设备" required></select>
+                        </label>
                         <label>开始时间<input type="datetime-local" name="from" required></label>
                         <label>结束时间<input type="datetime-local" name="to" required></label>
                         <button type="submit">提交预留</button>
@@ -252,8 +256,15 @@
                     <h4>借出设备</h4>
                     <form method="post" action="/checkouts/create" data-ajax="true">
                         <?= csrf_field() ?>
-                        <label>设备 ID<input type="number" name="device_id" min="1" required></label>
-                        <label>项目 ID（可选）<input type="number" name="project_id" min="1"></label>
+                        <label>设备
+                            <select name="device_id" data-select="devices" data-placeholder="请选择设备" required></select>
+                        </label>
+                        <label>借出用户
+                            <select name="user_id" data-select="users" data-placeholder="请选择用户" required></select>
+                        </label>
+                        <label>项目（可选）
+                            <select name="project_id" data-select="projects" data-placeholder="关联项目" data-allow-empty="true"></select>
+                        </label>
                         <label>借出时间<input type="datetime-local" name="now" required></label>
                         <label>归还期限<input type="datetime-local" name="due" required></label>
                         <label>借出照片（可选）<input type="url" name="photo"></label>
@@ -266,7 +277,9 @@
                     <h4>归还设备</h4>
                     <form method="post" action="/returns/create" data-ajax="true">
                         <?= csrf_field() ?>
-                        <label>设备 ID<input type="number" name="device_id" min="1" required></label>
+                        <label>设备
+                            <select name="device_id" data-select="devices" data-placeholder="请选择设备" required></select>
+                        </label>
                         <label>归还时间<input type="datetime-local" name="now" required></label>
                         <label>归还照片（可选）<input type="url" name="photo"></label>
                         <label>备注<textarea name="note"></textarea></label>
@@ -285,9 +298,15 @@
                     <h4>发起转交</h4>
                     <form method="post" action="/transfers/request" data-ajax="true">
                         <?= csrf_field() ?>
-                        <label>设备 ID<input type="number" name="device_id" min="1" required></label>
-                        <label>接收用户 ID<input type="number" name="to_user_id" min="1" required></label>
-                        <label>新项目 ID（可选）<input type="number" name="project_id" min="1"></label>
+                        <label>设备
+                            <select name="device_id" data-select="devices" data-placeholder="请选择设备" required></select>
+                        </label>
+                        <label>接收用户
+                            <select name="to_user_id" data-select="users" data-placeholder="请选择接收人" required></select>
+                        </label>
+                        <label>新项目（可选）
+                            <select name="project_id" data-select="projects" data-placeholder="关联项目" data-allow-empty="true"></select>
+                        </label>
                         <label>新的归还时间（可选）<input type="datetime-local" name="due_at"></label>
                         <label>备注（可选）<textarea name="note"></textarea></label>
                         <button type="submit">提交转交请求</button>
@@ -298,8 +317,12 @@
                     <h4>确认转交</h4>
                     <form method="post" action="/transfers/confirm" data-ajax="true">
                         <?= csrf_field() ?>
-                        <label>转交请求 ID<input type="number" name="transfer_id" min="1" required></label>
-                        <label>目标项目 ID（可选）<input type="number" name="project_id" min="1"></label>
+                        <label>转交请求
+                            <select name="transfer_id" data-select="transfers" data-select-filter="pending" data-placeholder="选择待确认请求" required></select>
+                        </label>
+                        <label>目标项目（可选）
+                            <select name="project_id" data-select="projects" data-placeholder="关联项目" data-allow-empty="true"></select>
+                        </label>
                         <label>新的归还时间（可选）<input type="datetime-local" name="due_at"></label>
                         <label>备注（可选）<textarea name="note"></textarea></label>
                         <button type="submit">确认接收</button>
@@ -469,6 +492,58 @@
         body.innerHTML = rows.map((row) => (builders[key] ?? (() => ''))(row)).join('');
     };
 
+    const selectBuilders = {
+        users: (item) => ({ value: item.id, label: `#${item.id} ${item.name ?? ''} (${item.email ?? ''})` }),
+        projects: (item) => ({ value: item.id, label: `#${item.id} ${item.name ?? ''}` }),
+        devices: (item) => ({ value: item.id, label: `#${item.id} ${item.code ?? ''}${item.model ? ' · ' + item.model : ''}` }),
+        transfers: (item) => ({ value: item.id, label: `#${item.id} 设备#${item.device_id} → 用户#${item.to_user_id}`, status: item.status ?? '' }),
+    };
+
+    const populateSelects = (data) => {
+        document.querySelectorAll('select[data-select]').forEach((select) => {
+            const key = select.dataset.select;
+            const builder = selectBuilders[key];
+            if (!builder) {
+                return;
+            }
+            const records = data[key] ?? [];
+            const filterStatus = select.dataset.selectFilter;
+            const allowEmpty = select.dataset.allowEmpty === 'true';
+            const placeholder = select.dataset.placeholder || '请选择';
+            const previous = select.value;
+
+            select.innerHTML = '';
+
+            if (allowEmpty) {
+                const opt = document.createElement('option');
+                opt.value = '';
+                opt.textContent = placeholder;
+                select.appendChild(opt);
+            }
+
+            records.forEach((item) => {
+                const built = builder(item);
+                if (!built) {
+                    return;
+                }
+                const status = built.status ?? item.status ?? null;
+                if (filterStatus && status !== filterStatus) {
+                    return;
+                }
+                const opt = document.createElement('option');
+                opt.value = String(built.value ?? item.id ?? '');
+                opt.textContent = built.label ?? String(built.value ?? item.id ?? '');
+                select.appendChild(opt);
+            });
+
+            if (previous && Array.from(select.options).some((opt) => opt.value === previous)) {
+                select.value = previous;
+            } else if (!allowEmpty && select.options.length > 0) {
+                select.selectedIndex = 0;
+            }
+        });
+    };
+
     const loadDashboardData = async () => {
         try {
             const res = await fetch('/dashboard/data', {
@@ -487,6 +562,7 @@
             renderTable('checkouts', data.checkouts ?? []);
             renderTable('transfers', data.transfers ?? []);
             renderTable('notifications', data.notifications ?? []);
+            populateSelects(data);
         } catch (error) {
             console.error('加载数据失败', error);
         }

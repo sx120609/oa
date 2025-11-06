@@ -141,6 +141,8 @@ final class DeviceFlowController extends Controller
             throw new HttpException('时间范围不合法', 409);
         }
 
+        $borrowerId = $this->requirePositiveInt('user_id');
+
         // TODO: Integrate penalty checks before allowing checkout (penalties table, rolling window).
 
         PenaltyService::ensureEligibleForCheckout($actorId);
@@ -154,6 +156,12 @@ final class DeviceFlowController extends Controller
 
         try {
             $pdo->beginTransaction();
+
+            $userCheck = $pdo->prepare('SELECT id FROM users WHERE id = :id LIMIT 1');
+            $userCheck->execute([':id' => $borrowerId]);
+            if (!$userCheck->fetchColumn()) {
+                throw new HttpException('借出人不存在', 404);
+            }
 
             $lock = $pdo->prepare('SELECT status FROM devices WHERE id = :device_id FOR UPDATE');
             $lock->execute([':device_id' => $deviceId]);
@@ -171,7 +179,7 @@ final class DeviceFlowController extends Controller
             $insert->execute([
                 ':project_id' => $projectId,
                 ':device_id' => $deviceId,
-                ':user_id' => $actorId,
+                ':user_id' => $borrowerId,
                 ':checked_out_at' => $checkedOutAtValue,
                 ':due_at' => $dueAtValue,
                 ':photo' => $photo,
@@ -213,6 +221,7 @@ final class DeviceFlowController extends Controller
                 'device_id' => $deviceId,
                 'checked_out_at' => $checkedOutAtValue,
                 'due_at' => $dueAtValue,
+                'user_id' => $borrowerId,
                 'note' => $note,
                 'photo' => $photo,
             ]

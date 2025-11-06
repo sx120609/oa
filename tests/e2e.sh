@@ -64,6 +64,7 @@ info "Seeding users table"
 PASSWORD_HASH=$(TEST_PASSWORD_VALUE="$TEST_PASSWORD" php -r 'echo password_hash(getenv("TEST_PASSWORD_VALUE"), PASSWORD_BCRYPT);')
 printf "INSERT INTO users (email, name, password_hash, role, created_at)\nVALUES ('owner@example.com', 'Owner', '%s', 'owner', NOW())\nON DUPLICATE KEY UPDATE password_hash = VALUES(password_hash);\n" "$PASSWORD_HASH" > "$TMP_SQL"
 mysql_db < "$TMP_SQL"
+BORROWER_ID=$(mysql_db -N -e "SELECT id FROM users WHERE email='owner@example.com' ORDER BY id DESC LIMIT 1")
 
 # Prime session & token
 TOKEN=$(csrf_token)
@@ -150,7 +151,7 @@ NOW=$(future_iso 4)
 DUE=$(future_iso 7)
 curl -sS -b "$COOKIE_JAR" \
   -X POST "$BASE_URL/checkouts/create" \
-  -d "_token=$TOKEN&device_id=$DEVICE_ID&project_id=$PROJECT_ID&now=$NOW&due=$DUE&note=first"
+  -d "_token=$TOKEN&device_id=$DEVICE_ID&project_id=$PROJECT_ID&user_id=$BORROWER_ID&now=$NOW&due=$DUE&note=first"
 printf "\n"
 
 CHECKOUT_ID=$(mysql_db -N -e "SELECT id FROM checkouts ORDER BY id DESC LIMIT 1")
@@ -160,7 +161,7 @@ echo "Checkout ID: $CHECKOUT_ID"
 info "Checkout failure"
 curl -sS -b "$COOKIE_JAR" \
   -X POST "$BASE_URL/checkouts/create" \
-  -d "_token=$TOKEN&device_id=$DEVICE_ID&project_id=$PROJECT_ID&now=$NOW&due=$DUE"
+  -d "_token=$TOKEN&device_id=$DEVICE_ID&project_id=$PROJECT_ID&user_id=$BORROWER_ID&now=$NOW&due=$DUE"
 printf "\n"
 
 # 7. Return success
@@ -184,7 +185,7 @@ NOW=$(future_iso 0)
 DUE=$(future_iso 1)
 curl -sS -b "$COOKIE_JAR" \
   -X POST "$BASE_URL/checkouts/create" \
-  -d "_token=$TOKEN&device_id=$DEVICE_ID&project_id=$PROJECT_ID&now=$NOW&due=$DUE"
+  -d "_token=$TOKEN&device_id=$DEVICE_ID&project_id=$PROJECT_ID&user_id=$BORROWER_ID&now=$NOW&due=$DUE"
 printf "\n"
 
 sleep 2
