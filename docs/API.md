@@ -14,7 +14,7 @@
 - `POST /work-orders/{id}/pause`：暂停工单。
 - `POST /work-orders/{id}/resume`：恢复工单。
 - `POST /work-orders/{id}/complete`：完成工单并填写 `labor_minutes`, `result`。
-- `POST /work-orders/{id}/acceptance`：验收，字段：`passed`, `score`, `remarks`, `photos[]`, `materials_confirmed`（当无耗材记录时需显式确认）。
+- `POST /work-orders/{id}/acceptance`：验收，字段：`passed`, `score`, `remarks`, `photos[]`。
 
 ## 备件与库存
 - `GET /spares?keyword=`：备件列表与搜索。
