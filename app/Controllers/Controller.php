@@ -32,6 +32,22 @@ abstract class Controller
         return $actorId;
     }
 
+    protected function actorRole(): ?string
+    {
+        $role = $_SESSION['role'] ?? null;
+        if ($role === null) {
+            return null;
+        }
+
+        return (string) $role;
+    }
+
+    protected function actorIsAdmin(): bool
+    {
+        $role = $this->actorRole();
+        return $role === 'owner' || $role === 'asset_admin';
+    }
+
     protected function requireString(string $key): string
     {
         $value = trim((string) ($_POST[$key] ?? ''));
