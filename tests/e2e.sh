@@ -71,11 +71,13 @@ mysql_db < "$TMP_SQL"
 TOKEN=$(csrf_token)
 echo "CSRF token: $TOKEN"
 
+login_payload="_token=$TOKEN&email=owner@example.com&password=secretpass"
+
 # 2. Login success/failure
 info "Login success"
 curl -sS -b "$COOKIE_JAR" -c "$COOKIE_JAR" \
   -X POST "$BASE_URL/login" \
-  -d "_token=$TOKEN&email=owner@example.com&password=secretpass"
+  -d "$login_payload"
 printf "\n"
 
 info "Login failure"
@@ -86,6 +88,7 @@ curl -sS -b "$COOKIE_JAR" \
 # Refresh token after successful login
 TOKEN=$(csrf_token)
 echo "Session CSRF token: $TOKEN"
+login_payload="_token=$TOKEN&email=owner@example.com&password=secretpass"
 
 # 3. Create project success
 info "Create project success"
