@@ -87,7 +87,20 @@ final class HomeController extends Controller
     private function fetchDevices(PDO $pdo): array
     {
         try {
-            $rows = $pdo->query('SELECT * FROM devices ORDER BY created_at DESC LIMIT 50')->fetchAll() ?: [];
+            $stmt = $pdo->query(
+                'SELECT d.*, u.name AS holder_name, u.email AS holder_email
+                 FROM devices d
+                 LEFT JOIN (
+                    SELECT c.device_id, c.user_id
+                    FROM checkouts c
+                    WHERE c.return_at IS NULL
+                    ORDER BY c.checked_out_at DESC
+                 ) AS active ON active.device_id = d.id
+                 LEFT JOIN users u ON u.id = active.user_id
+                 ORDER BY d.created_at DESC
+                 LIMIT 50'
+            );
+            $rows = $stmt ? $stmt->fetchAll() : [];
         } catch (PDOException $exception) {
             error_log('Load devices failed: ' . $exception->getMessage());
             return [];
@@ -101,6 +114,8 @@ final class HomeController extends Controller
             'serial' => $row['serial'] ?? null,
             'photo_url' => $row['photo_url'] ?? null,
             'created_at' => $row['created_at'] ?? null,
+            'holder_name' => $row['holder_name'] ?? null,
+            'holder_email' => $row['holder_email'] ?? null,
         ], $rows);
     }
 
