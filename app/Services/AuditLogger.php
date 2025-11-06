@@ -28,7 +28,7 @@ final class AuditLogger
             $pdo = DB::connection();
             $stmt = $pdo->prepare(
                 'INSERT INTO audit_logs (actor_id, entity_type, entity_id, action, detail, created_at)
-                 VALUES (:actor_id, :entity_type, :entity_id, :action, CAST(:detail AS JSON), NOW())'
+                 VALUES (:actor_id, :entity_type, :entity_id, :action, :detail, NOW())'
             );
 
             $stmt->execute([
