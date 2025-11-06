@@ -452,6 +452,16 @@
         <footer>© <?= date('Y') ?> 资产运营平台 · 管理后台</footer>
     </div>
 </div>
+<?php
+$initialDashboard = $session['uid'] ? ($data ?? []) : [];
+$initialDashboardJson = json_encode($initialDashboard, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
+if ($initialDashboardJson === false) {
+    $initialDashboardJson = '{}';
+}
+?>
+<script>
+window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
+</script>
 <script>
 (() => {
     const forms = document.querySelectorAll('form[data-ajax="true"]');
@@ -833,6 +843,24 @@
         });
     };
 
+    const initialDashboardData = window.__DASHBOARD_DATA__ || null;
+
+    const applyDashboardData = (data) => {
+        if (!data || typeof data !== 'object') {
+            return;
+        }
+        dashboardData = data;
+        renderTable('users', data.users ?? []);
+        renderTable('projects', data.projects ?? []);
+        renderTable('devices', data.devices ?? []);
+        renderTable('reservations', data.reservations ?? []);
+        renderTable('checkouts', data.checkouts ?? []);
+        renderTable('transfers', data.transfers ?? []);
+        renderTable('notifications', data.notifications ?? []);
+        populateSelects(data);
+        syncEditForms();
+    };
+
     const loadDashboardData = async () => {
         try {
             const res = await fetch('/dashboard/data', {
@@ -843,21 +871,15 @@
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const payload = await res.json();
             if (!payload.success) throw new Error(payload.message ?? '数据加载失败');
-            const data = payload.data ?? {};
-            dashboardData = data;
-            renderTable('users', data.users ?? []);
-            renderTable('projects', data.projects ?? []);
-            renderTable('devices', data.devices ?? []);
-            renderTable('reservations', data.reservations ?? []);
-            renderTable('checkouts', data.checkouts ?? []);
-            renderTable('transfers', data.transfers ?? []);
-            renderTable('notifications', data.notifications ?? []);
-            populateSelects(data);
-            syncEditForms();
+            applyDashboardData(payload.data ?? {});
         } catch (error) {
             console.error('加载数据失败', error);
         }
     };
+
+    if (authState === 'authenticated' && initialDashboardData && Object.keys(initialDashboardData).length) {
+        applyDashboardData(initialDashboardData);
+    }
 
     const refreshStatus = async () => {
         try {
