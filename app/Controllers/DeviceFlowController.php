@@ -534,4 +534,80 @@ final class DeviceFlowController extends Controller
 
         return Response::ok();
     }
+
+    public function updateCheckout(): string
+    {
+        $actorId = $this->requireActor();
+        $checkoutId = $this->requirePositiveInt('checkout_id');
+        $projectId = $this->optionalPositiveInt('project_id');
+        $userId = $this->optionalPositiveInt('user_id');
+        $dueAtTs = $this->timestampFromPost('due', false);
+
+        if ($dueAtTs === null) {
+            throw new HttpException('请提供新的归还时间', 409);
+        }
+
+        $dueAt = date('Y-m-d H:i:s', $dueAtTs);
+        $note = $this->optionalString('note');
+
+        $pdo = DB::connection();
+
+        try {
+            $pdo->beginTransaction();
+
+            $checkoutStmt = $pdo->prepare('SELECT * FROM checkouts WHERE id = :id FOR UPDATE');
+            $checkoutStmt->execute([':id' => $checkoutId]);
+            $checkout = $checkoutStmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$checkout) {
+                throw new HttpException('借用记录不存在', 404);
+            }
+
+            $newProjectId = $projectId ?? ($checkout['project_id'] ? (int) $checkout['project_id'] : null);
+            $newUserId = $userId ?? (int) $checkout['user_id'];
+
+            if ($userId !== null) {
+                $userCheck = $pdo->prepare('SELECT id FROM users WHERE id = :id LIMIT 1');
+                $userCheck->execute([':id' => $newUserId]);
+                if (!$userCheck->fetchColumn()) {
+                    throw new HttpException('指定的借用人不存在', 404);
+                }
+            }
+
+            $stmt = $pdo->prepare(
+                'UPDATE checkouts SET project_id = :project_id, user_id = :user_id, due_at = :due_at, note = :note WHERE id = :id'
+            );
+            $stmt->execute([
+                ':project_id' => $newProjectId,
+                ':user_id' => $newUserId,
+                ':due_at' => $dueAt,
+                ':note' => $note ?: $checkout['note'],
+                ':id' => $checkoutId,
+            ]);
+
+            if ($stmt->rowCount() === 0) {
+                throw new HttpException('借用记录无变化', 404);
+            }
+
+            $pdo->commit();
+
+            AuditLogger::log($actorId, 'checkout', $checkoutId, 'update', [
+                'project_id' => $newProjectId,
+                'user_id' => $newUserId,
+                'due_at' => $dueAt,
+            ]);
+        } catch (HttpException $exception) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $exception;
+        } catch (PDOException $exception) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw new HttpException('更新借用记录失败', 500, $exception);
+        }
+
+        return Response::ok();
+    }
 }

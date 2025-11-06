@@ -12,6 +12,15 @@ use PDOException;
 
 final class DeviceController extends Controller
 {
+    private const STATUSES = [
+        'in_stock',
+        'reserved',
+        'checked_out',
+        'transfer_pending',
+        'lost',
+        'repair',
+    ];
+
     public function create(): string
     {
         $actorId = $this->requireActor();
@@ -66,6 +75,51 @@ final class DeviceController extends Controller
                 'created_by' => $actorId,
             ]
         );
+
+        return Response::ok();
+    }
+
+    public function update(): string
+    {
+        $actorId = $this->requireActor();
+        $deviceId = $this->requirePositiveInt('device_id');
+        $model = $this->requireString('model');
+        $status = strtolower($this->requireString('status'));
+        $serial = $this->optionalString('serial');
+        $photoUrl = $this->optionalString('photo_url');
+
+        if (!in_array($status, self::STATUSES, true)) {
+            throw new HttpException('设备状态不合法', 409);
+        }
+
+        try {
+            $pdo = DB::connection();
+            $stmt = $pdo->prepare(
+                'UPDATE devices SET model = :model, status = :status, serial = :serial, photo_url = :photo_url WHERE id = :id'
+            );
+            $stmt->execute([
+                ':model' => $model,
+                ':status' => $status,
+                ':serial' => $serial,
+                ':photo_url' => $photoUrl,
+                ':id' => $deviceId,
+            ]);
+
+            if ($stmt->rowCount() === 0) {
+                throw new HttpException('设备不存在或无修改', 404);
+            }
+
+            AuditLogger::log($actorId, 'device', $deviceId, 'update', [
+                'model' => $model,
+                'status' => $status,
+                'serial' => $serial,
+                'photo_url' => $photoUrl,
+            ]);
+        } catch (HttpException $exception) {
+            throw $exception;
+        } catch (PDOException $exception) {
+            throw new HttpException('更新设备失败', 500, $exception);
+        }
 
         return Response::ok();
     }

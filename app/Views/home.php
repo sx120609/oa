@@ -67,6 +67,7 @@
         .data-table thead { background: #f8fafc; }
         .empty-placeholder { margin-top: 1rem; color: var(--muted); font-size: 0.9rem; }
         .form-card { background: #f9fafb; border: 1px solid var(--border); border-radius: 1rem; padding: 1.4rem; margin-top: 1.5rem; display: grid; gap: 0.85rem; }
+        .form-card.highlight { box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.18); }
         .form-card h4 { margin: 0; font-size: 1rem; }
         .form-card label { display: grid; gap: 0.35rem; font-size: 0.9rem; }
         .form-card input, .form-card textarea, .form-card select { border: 1px solid var(--border); border-radius: 0.7rem; padding: 0.55rem 0.7rem; font-size: 0.95rem; }
@@ -75,6 +76,7 @@
         .form-result.success { background: rgba(16, 185, 129, 0.15); color: var(--success); }
         .form-result.error { background: rgba(248, 113, 113, 0.15); color: var(--danger); }
         .action-btn { border: none; border-radius: 0.6rem; padding: 0.35rem 0.65rem; font-size: 0.85rem; cursor: pointer; transition: opacity 0.15s ease; }
+        .action-btn.edit { background: rgba(37, 99, 235, 0.12); color: var(--primary); }
         .action-btn.delete { background: rgba(239, 68, 68, 0.12); color: var(--danger); }
         .action-btn.delete:hover { opacity: 0.75; }
         footer { padding: 1.6rem 3rem; text-align: center; color: var(--muted); font-size: 0.85rem; }
@@ -179,12 +181,32 @@
                         <div class="form-result" data-result></div>
                     </form>
                 </div>
+                <div class="form-card">
+                    <h4>编辑用户</h4>
+                    <form method="post" action="/users/update" data-ajax="true" data-edit-form="users" data-reset-on-success="false">
+                        <?= csrf_field() ?>
+                        <label>选择用户
+                            <select name="user_id" data-select="users" data-placeholder="请选择用户" required></select>
+                        </label>
+                        <label>姓名<input type="text" name="name" required></label>
+                        <label>角色
+                            <select name="role" required>
+                                <option value="owner">负责人</option>
+                                <option value="asset_admin">资产管理员</option>
+                                <option value="planner">策划</option>
+                                <option value="photographer">摄影</option>
+                            </select>
+                        </label>
+                        <button type="submit">保存修改</button>
+                        <div class="form-result" data-result></div>
+                    </form>
+                </div>
             </section>
             <section class="tab-content" data-tab-content="projects">
                 <div class="section-title"><h2>项目列表</h2><span class="badge" data-count-badge="projects">共 0 条</span></div>
                 <div class="data-table-wrapper">
                     <table class="data-table">
-                        <thead><tr><th>ID</th><th>名称</th><th>地点</th><th>状态</th><th>开始时间</th><th>交付时间</th><th>创建时间</th></tr></thead>
+                        <thead><tr><th>ID</th><th>名称</th><th>地点</th><th>状态</th><th>开始时间</th><th>交付时间</th><th>创建时间</th><th>操作</th></tr></thead>
                         <tbody data-table-body="projects"></tbody>
                     </table>
                 </div>
@@ -203,11 +225,34 @@
                         <div class="form-result" data-result></div>
                     </form>
                 </div>
+                <div class="form-card">
+                    <h4>编辑项目</h4>
+                    <form method="post" action="/projects/update" data-ajax="true" data-edit-form="projects" data-reset-on-success="false">
+                        <?= csrf_field() ?>
+                        <label>选择项目
+                            <select name="project_id" data-select="projects" data-placeholder="请选择项目" required></select>
+                        </label>
+                        <label>项目名称<input type="text" name="name" required></label>
+                        <label>项目地点<input type="text" name="location" required></label>
+                        <label>项目状态
+                            <select name="status" required>
+                                <option value="ongoing">进行中</option>
+                                <option value="done">已完成</option>
+                            </select>
+                        </label>
+                        <label>开始时间<input type="datetime-local" name="starts_at" required></label>
+                        <label>交付时间<input type="datetime-local" name="due_at" required></label>
+                        <label>报价金额<input type="number" step="0.01" name="quote_amount" required></label>
+                        <label>备注<textarea name="note"></textarea></label>
+                        <button type="submit">保存修改</button>
+                        <div class="form-result" data-result></div>
+                    </form>
+                </div>
             </section>
             <section class="tab-content" data-tab-content="devices">
                 <div class="section-title"><h2>设备列表</h2><span class="badge" data-count-badge="devices">共 0 条</span></div>
                 <div class="data-table-wrapper">
-                    <table class="data-table"><thead><tr><th>ID</th><th>编号</th><th>型号</th><th>状态</th><th>创建时间</th></tr></thead><tbody data-table-body="devices"></tbody></table>
+                    <table class="data-table"><thead><tr><th>ID</th><th>编号</th><th>型号</th><th>状态</th><th>创建时间</th><th>操作</th></tr></thead><tbody data-table-body="devices"></tbody></table>
                 </div>
                 <p class="empty-placeholder" data-empty="devices">暂无设备记录。</p>
                 <div class="form-card">
@@ -222,11 +267,35 @@
                         <div class="form-result" data-result></div>
                     </form>
                 </div>
+                <div class="form-card">
+                    <h4>编辑设备</h4>
+                    <form method="post" action="/devices/update" data-ajax="true" data-edit-form="devices" data-reset-on-success="false">
+                        <?= csrf_field() ?>
+                        <label>选择设备
+                            <select name="device_id" data-select="devices" data-placeholder="请选择设备" required></select>
+                        </label>
+                        <label>设备型号<input type="text" name="model" required></label>
+                        <label>设备状态
+                            <select name="status" required>
+                                <option value="in_stock">在库</option>
+                                <option value="reserved">已预留</option>
+                                <option value="checked_out">借出中</option>
+                                <option value="transfer_pending">转交待确认</option>
+                                <option value="lost">遗失</option>
+                                <option value="repair">维修中</option>
+                            </select>
+                        </label>
+                        <label>序列号（可选）<input type="text" name="serial"></label>
+                        <label>照片地址（可选）<input type="url" name="photo_url"></label>
+                        <button type="submit">保存修改</button>
+                        <div class="form-result" data-result></div>
+                    </form>
+                </div>
             </section>
             <section class="tab-content" data-tab-content="reservations">
                 <div class="section-title"><h2>预留列表</h2><span class="badge" data-count-badge="reservations">共 0 条</span></div>
                 <div class="data-table-wrapper">
-                    <table class="data-table"><thead><tr><th>ID</th><th>项目</th><th>设备</th><th>预留开始</th><th>预留结束</th><th>创建时间</th></tr></thead><tbody data-table-body="reservations"></tbody></table>
+                    <table class="data-table"><thead><tr><th>ID</th><th>项目</th><th>设备</th><th>预留开始</th><th>预留结束</th><th>创建时间</th><th>操作</th></tr></thead><tbody data-table-body="reservations"></tbody></table>
                 </div>
                 <p class="empty-placeholder" data-empty="reservations">当前暂无预留记录。</p>
                 <div class="form-card">
@@ -245,11 +314,30 @@
                         <div class="form-result" data-result></div>
                     </form>
                 </div>
+                <div class="form-card">
+                    <h4>编辑预留</h4>
+                    <form method="post" action="/reservations/update" data-ajax="true" data-edit-form="reservations" data-reset-on-success="false">
+                        <?= csrf_field() ?>
+                        <label>选择记录
+                            <select name="reservation_id" data-select="reservations" data-placeholder="请选择预留记录" required></select>
+                        </label>
+                        <label>项目
+                            <select name="project_id" data-select="projects" data-placeholder="请选择项目" required></select>
+                        </label>
+                        <label>设备
+                            <select name="device_id" data-select="devices" data-placeholder="请选择设备" required></select>
+                        </label>
+                        <label>开始时间<input type="datetime-local" name="from" required></label>
+                        <label>结束时间<input type="datetime-local" name="to" required></label>
+                        <button type="submit">保存修改</button>
+                        <div class="form-result" data-result></div>
+                    </form>
+                </div>
             </section>
             <section class="tab-content" data-tab-content="checkouts">
                 <div class="section-title"><h2>借用列表</h2><span class="badge" data-count-badge="checkouts">共 0 条</span></div>
                 <div class="data-table-wrapper">
-                    <table class="data-table"><thead><tr><th>ID</th><th>项目</th><th>设备</th><th>借出时间</th><th>到期时间</th><th>归还时间</th><th>状态</th></tr></thead><tbody data-table-body="checkouts"></tbody></table>
+                    <table class="data-table"><thead><tr><th>ID</th><th>项目</th><th>设备</th><th>借出时间</th><th>到期时间</th><th>归还时间</th><th>状态</th><th>操作</th></tr></thead><tbody data-table-body="checkouts"></tbody></table>
                 </div>
                 <p class="empty-placeholder" data-empty="checkouts">暂无借用记录。</p>
                 <div class="form-card">
@@ -284,6 +372,25 @@
                         <label>归还照片（可选）<input type="url" name="photo"></label>
                         <label>备注<textarea name="note"></textarea></label>
                         <button type="submit">提交归还</button>
+                        <div class="form-result" data-result></div>
+                    </form>
+                </div>
+                <div class="form-card">
+                    <h4>编辑借用记录</h4>
+                    <form method="post" action="/checkouts/update" data-ajax="true" data-edit-form="checkouts" data-reset-on-success="false">
+                        <?= csrf_field() ?>
+                        <label>选择借用
+                            <select name="checkout_id" data-select="checkouts" data-placeholder="请选择借用记录" required></select>
+                        </label>
+                        <label>借用用户
+                            <select name="user_id" data-select="users" data-placeholder="请选择用户" required></select>
+                        </label>
+                        <label>关联项目（可选）
+                            <select name="project_id" data-select="projects" data-placeholder="关联项目" data-allow-empty="true"></select>
+                        </label>
+                        <label>归还期限<input type="datetime-local" name="due" required></label>
+                        <label>备注<textarea name="note"></textarea></label>
+                        <button type="submit">保存修改</button>
                         <div class="form-result" data-result></div>
                     </form>
                 </div>
@@ -352,6 +459,7 @@
     const tabContents = document.querySelectorAll('.tab-content');
     const breadcrumb = document.getElementById('breadcrumb-label');
     let authState = document.querySelector('.content')?.dataset.loginState || 'guest';
+    let dashboardData = {};
 
     const syncAuthVisibility = () => {
         document.querySelectorAll('[data-auth-visible]').forEach((block) => {
@@ -415,7 +523,10 @@
                     <td>${row.email ?? '-'}</td>
                     <td>${row.role ?? '-'}</td>
                     <td>${formatDate(row.created_at ?? null)}</td>
-                    <td><button type="button" class="action-btn delete" data-delete-user="${row.id ?? ''}">删除</button></td>
+                    <td>
+                        <button type="button" class="action-btn edit" data-edit-trigger="users" data-record-id="${row.id ?? ''}">编辑</button>
+                        <button type="button" class="action-btn delete" data-delete-user="${row.id ?? ''}">删除</button>
+                    </td>
                 </tr>
             `,
             transfers: (row) => {
@@ -442,6 +553,7 @@
                     <td>${formatDate(row.starts_at ?? null)}</td>
                     <td>${formatDate(row.due_at ?? null)}</td>
                     <td>${formatDate(row.created_at ?? null)}</td>
+                    <td><button type="button" class="action-btn edit" data-edit-trigger="projects" data-record-id="${row.id ?? ''}">编辑</button></td>
                 </tr>
             `,
             devices: (row) => `
@@ -451,6 +563,7 @@
                     <td>${row.model ?? '-'}</td>
                     <td>${statusChip(row.status ?? null, 'device')}</td>
                     <td>${formatDate(row.created_at ?? null)}</td>
+                    <td><button type="button" class="action-btn edit" data-edit-trigger="devices" data-record-id="${row.id ?? ''}">编辑</button></td>
                 </tr>
             `,
             reservations: (row) => `
@@ -461,6 +574,7 @@
                     <td>${formatDate(row.reserved_from ?? null)}</td>
                     <td>${formatDate(row.reserved_to ?? null)}</td>
                     <td>${formatDate(row.created_at ?? null)}</td>
+                    <td><button type="button" class="action-btn edit" data-edit-trigger="reservations" data-record-id="${row.id ?? ''}">编辑</button></td>
                 </tr>
             `,
             checkouts: (row) => {
@@ -474,6 +588,7 @@
                         <td>${formatDate(row.due_at ?? null)}</td>
                         <td>${formatDate(row.return_at ?? null)}</td>
                         <td><span class="status-chip ${returned ? 'success' : 'warning'}">${returned ? '已归还' : '借出中'}</span></td>
+                        <td><button type="button" class="action-btn edit" data-edit-trigger="checkouts" data-record-id="${row.id ?? ''}">编辑</button></td>
                     </tr>
                 `;
             },
@@ -496,8 +611,182 @@
         users: (item) => ({ value: item.id, label: `#${item.id} ${item.name ?? ''} (${item.email ?? ''})` }),
         projects: (item) => ({ value: item.id, label: `#${item.id} ${item.name ?? ''}` }),
         devices: (item) => ({ value: item.id, label: `#${item.id} ${item.code ?? ''}${item.model ? ' · ' + item.model : ''}` }),
+        reservations: (item) => ({
+            value: item.id,
+            label: `#${item.id} ${item.device_code ?? ('设备#' + (item.device_id ?? '-'))} · ${item.project_name ?? ('项目#' + (item.project_id ?? '-'))}`,
+        }),
+        checkouts: (item) => ({
+            value: item.id,
+            label: `#${item.id} ${item.device_code ?? ('设备#' + (item.device_id ?? '-'))} → 用户#${item.user_id ?? '-'}`,
+            status: item.return_at ? 'closed' : 'open',
+        }),
         transfers: (item) => ({ value: item.id, label: `#${item.id} 设备#${item.device_id} → 用户#${item.to_user_id}`, status: item.status ?? '' }),
     };
+
+    const toLocalDateTimeValue = (value) => {
+        if (!value) {
+            return '';
+        }
+        const normalized = String(value).replace(/\.\d+/, '').replace('Z', '');
+        const replaced = normalized.includes('T') ? normalized : normalized.replace(' ', 'T');
+        return replaced.slice(0, 16);
+    };
+
+    const setSelectValue = (select, value) => {
+        if (!select) {
+            return;
+        }
+        const target = value === null || value === undefined ? '' : String(value);
+        const options = Array.from(select.options);
+        if (target !== '' && options.some((opt) => opt.value === target)) {
+            select.value = target;
+        } else if (target === '' && options.some((opt) => opt.value === '')) {
+            select.value = '';
+        } else if (select.dataset.allowEmpty === 'true') {
+            select.value = '';
+        } else if (options.length > 0) {
+            select.value = options[0].value;
+        } else {
+            select.value = '';
+        }
+    };
+
+    const setFieldValue = (form, name, value) => {
+        const field = form.querySelector(`[name="${name}"]`);
+        if (!field) {
+            return;
+        }
+        if (field.tagName === 'SELECT') {
+            setSelectValue(field, value);
+        } else {
+            field.value = value ?? '';
+        }
+    };
+
+    const editForms = {};
+    const editConfigs = {
+        users: {
+            dataset: 'users',
+            selectName: 'user_id',
+            fill: (item, form) => {
+                setFieldValue(form, 'name', item?.name ?? '');
+                setFieldValue(form, 'role', item?.role ?? 'owner');
+            },
+        },
+        projects: {
+            dataset: 'projects',
+            selectName: 'project_id',
+            fill: (item, form) => {
+                setFieldValue(form, 'name', item?.name ?? '');
+                setFieldValue(form, 'location', item?.location ?? '');
+                setFieldValue(form, 'status', item?.status ?? 'ongoing');
+                setFieldValue(form, 'starts_at', toLocalDateTimeValue(item?.starts_at ?? ''));
+                setFieldValue(form, 'due_at', toLocalDateTimeValue(item?.due_at ?? ''));
+                const quote = item?.quote_amount;
+                setFieldValue(form, 'quote_amount', quote === null || quote === undefined ? '' : String(quote));
+                setFieldValue(form, 'note', item?.note ?? '');
+            },
+        },
+        devices: {
+            dataset: 'devices',
+            selectName: 'device_id',
+            fill: (item, form) => {
+                setFieldValue(form, 'model', item?.model ?? '');
+                setFieldValue(form, 'status', item?.status ?? 'in_stock');
+                setFieldValue(form, 'serial', item?.serial ?? '');
+                setFieldValue(form, 'photo_url', item?.photo_url ?? '');
+            },
+        },
+        reservations: {
+            dataset: 'reservations',
+            selectName: 'reservation_id',
+            fill: (item, form) => {
+                setFieldValue(form, 'project_id', item?.project_id ?? '');
+                setFieldValue(form, 'device_id', item?.device_id ?? '');
+                setFieldValue(form, 'from', toLocalDateTimeValue(item?.reserved_from ?? ''));
+                setFieldValue(form, 'to', toLocalDateTimeValue(item?.reserved_to ?? ''));
+            },
+        },
+        checkouts: {
+            dataset: 'checkouts',
+            selectName: 'checkout_id',
+            fill: (item, form) => {
+                setFieldValue(form, 'user_id', item?.user_id ?? '');
+                setFieldValue(form, 'project_id', item?.project_id ?? '');
+                setFieldValue(form, 'due', toLocalDateTimeValue(item?.due_at ?? ''));
+                setFieldValue(form, 'note', item?.note ?? '');
+            },
+        },
+    };
+
+    const syncEditForm = (key) => {
+        const config = editConfigs[key];
+        const form = editForms[key];
+        if (!config || !form) {
+            return;
+        }
+
+        const select = form.querySelector(`[name="${config.selectName}"]`);
+        if (!select) {
+            return;
+        }
+
+        const dataset = dashboardData[config.dataset] ?? [];
+        const hasData = dataset.length > 0;
+        const idField = config.idField ?? 'id';
+        const matchesSelection = (item, value) => String(item?.[idField] ?? '') === String(value ?? '');
+
+        form.querySelectorAll('input, select, textarea, button').forEach((field) => {
+            if (field.name === '_token') {
+                return;
+            }
+            if (field.matches(`[name="${config.selectName}"]`)) {
+                field.disabled = !hasData;
+            } else if (field.tagName === 'BUTTON') {
+                field.disabled = !hasData;
+            } else {
+                field.disabled = !hasData;
+            }
+        });
+
+        if (!hasData) {
+            config.fill(null, form);
+            if (select.options.length > 0) {
+                select.selectedIndex = 0;
+            } else {
+                select.value = '';
+            }
+            return;
+        }
+
+        if (select.value && !dataset.some((item) => matchesSelection(item, select.value))) {
+            select.value = '';
+        }
+
+        if (!select.value && select.options.length > 0) {
+            select.value = select.options[0].value;
+        }
+
+        const current = dataset.find((item) => matchesSelection(item, select.value)) ?? null;
+        config.fill(current, form);
+    };
+
+    const syncEditForms = () => {
+        Object.keys(editForms).forEach((key) => syncEditForm(key));
+    };
+
+    document.querySelectorAll('[data-edit-form]').forEach((form) => {
+        const key = form.dataset.editForm;
+        if (!key || !editConfigs[key]) {
+            return;
+        }
+        editForms[key] = form;
+        const select = form.querySelector(`[name="${editConfigs[key].selectName}"]`);
+        if (select) {
+            select.addEventListener('change', () => syncEditForm(key));
+        }
+        syncEditForm(key);
+    });
 
     const populateSelects = (data) => {
         document.querySelectorAll('select[data-select]').forEach((select) => {
@@ -555,6 +844,7 @@
             const payload = await res.json();
             if (!payload.success) throw new Error(payload.message ?? '数据加载失败');
             const data = payload.data ?? {};
+            dashboardData = data;
             renderTable('users', data.users ?? []);
             renderTable('projects', data.projects ?? []);
             renderTable('devices', data.devices ?? []);
@@ -563,6 +853,7 @@
             renderTable('transfers', data.transfers ?? []);
             renderTable('notifications', data.notifications ?? []);
             populateSelects(data);
+            syncEditForms();
         } catch (error) {
             console.error('加载数据失败', error);
         }
@@ -683,31 +974,67 @@
     });
 
     document.addEventListener('click', async (event) => {
-        const btn = event.target.closest('[data-delete-user]');
-        if (!btn) return;
-        const userId = btn.getAttribute('data-delete-user');
-        if (!userId || !confirm('确认删除该用户？')) {
+        const deleteBtn = event.target.closest('[data-delete-user]');
+        if (deleteBtn) {
+            const userId = deleteBtn.getAttribute('data-delete-user');
+            if (!userId || !confirm('确认删除该用户？')) {
+                return;
+            }
+            try {
+                const formData = new FormData();
+                formData.append('_token', csrfToken);
+                formData.append('user_id', userId);
+                const res = await fetch('/users/delete', {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    credentials: 'same-origin',
+                });
+                const text = await res.text();
+                const { type, message } = parseResponse(text);
+                if (type === 'success') {
+                    await refreshStatus();
+                } else {
+                    alert(message);
+                }
+            } catch (error) {
+                alert(error instanceof Error ? error.message : '删除失败');
+            }
             return;
         }
-        try {
-            const formData = new FormData();
-            formData.append('_token', csrfToken);
-            formData.append('user_id', userId);
-            const res = await fetch('/users/delete', {
-                method: 'POST',
-                body: formData,
-                headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                credentials: 'same-origin',
-            });
-            const text = await res.text();
-            const { type, message } = parseResponse(text);
-            if (type === 'success') {
-                await refreshStatus();
-            } else {
-                alert(message);
+
+        const editBtn = event.target.closest('[data-edit-trigger]');
+        if (editBtn) {
+            event.preventDefault();
+            const key = editBtn.getAttribute('data-edit-trigger');
+            const recordId = editBtn.getAttribute('data-record-id') ?? '';
+            if (!key || !editConfigs[key]) {
+                return;
             }
-        } catch (error) {
-            alert(error instanceof Error ? error.message : '删除失败');
+
+            const tabButton = document.querySelector(`.tab-btn[data-tab="${key}"]`);
+            if (tabButton) {
+                tabButton.click();
+            }
+
+            const form = editForms[key];
+            if (!form) {
+                return;
+            }
+
+            const select = form.querySelector(`[name="${editConfigs[key].selectName}"]`);
+            if (select && recordId) {
+                const hasOption = Array.from(select.options).some((opt) => opt.value === recordId);
+                if (hasOption) {
+                    select.value = recordId;
+                }
+            }
+
+            syncEditForm(key);
+            const card = form.closest('.form-card') || form;
+            card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            card.classList.add('highlight');
+            setTimeout(() => card.classList.remove('highlight'), 1200);
         }
     });
 

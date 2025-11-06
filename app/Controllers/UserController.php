@@ -100,4 +100,41 @@ final class UserController extends Controller
 
         return Response::ok();
     }
+
+    public function update(): string
+    {
+        $actorId = $this->requireActor();
+        $userId = $this->requirePositiveInt('user_id');
+        $name = $this->requireString('name');
+        $role = strtolower($this->requireString('role'));
+
+        if (!in_array($role, self::ROLES, true)) {
+            throw new HttpException('角色类型不合法', 409);
+        }
+
+        try {
+            $pdo = DB::connection();
+            $stmt = $pdo->prepare('UPDATE users SET name = :name, role = :role WHERE id = :id');
+            $stmt->execute([
+                ':name' => $name,
+                ':role' => $role,
+                ':id' => $userId,
+            ]);
+
+            if ($stmt->rowCount() === 0) {
+                throw new HttpException('用户不存在或无修改', 404);
+            }
+
+            AuditLogger::log($actorId, 'user', $userId, 'update', [
+                'name' => $name,
+                'role' => $role,
+            ]);
+        } catch (HttpException $exception) {
+            throw $exception;
+        } catch (PDOException $exception) {
+            throw new HttpException('更新用户失败', 500, $exception);
+        }
+
+        return Response::ok();
+    }
 }

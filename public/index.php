@@ -57,6 +57,11 @@ $router->post('/extensions/approve', 'ExtensionController@approve');
 $router->get('/dashboard/data', 'DashboardController@summary');
 $router->post('/users/create', 'UserController@create');
 $router->post('/users/delete', 'UserController@delete');
+$router->post('/users/update', 'UserController@update');
+$router->post('/projects/update', 'ProjectController@update');
+$router->post('/devices/update', 'DeviceController@update');
+$router->post('/reservations/update', 'ReservationController@update');
+$router->post('/checkouts/update', 'DeviceFlowController@updateCheckout');
 
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
