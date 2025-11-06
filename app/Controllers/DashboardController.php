@@ -18,12 +18,12 @@ final class DashboardController extends Controller
             $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 
             $projects = $pdo->query(
-                'SELECT id, name, location, status, starts_at, due_at, created_at
+                'SELECT id, name, location, status, starts_at, due_at, quote_amount, note, created_at
                  FROM projects ORDER BY created_at DESC LIMIT 10'
             )->fetchAll() ?: [];
 
             $devices = $pdo->query(
-                'SELECT id, code, model, status, created_at
+                'SELECT id, code, model, status, serial, photo_url, created_at
                  FROM devices ORDER BY created_at DESC LIMIT 10'
             )->fetchAll() ?: [];
 
@@ -38,7 +38,7 @@ final class DashboardController extends Controller
             )->fetchAll() ?: [];
 
             $checkouts = $pdo->query(
-                'SELECT c.id, c.project_id, c.device_id, c.user_id, c.checked_out_at, c.due_at, c.return_at, c.created_at,
+                'SELECT c.id, c.project_id, c.device_id, c.user_id, c.checked_out_at, c.due_at, c.return_at, c.note, c.created_at,
                         p.name AS project_name, d.code AS device_code
                  FROM checkouts c
                  LEFT JOIN projects p ON p.id = c.project_id
@@ -58,6 +58,14 @@ final class DashboardController extends Controller
                 'SELECT id, name, email, role, created_at FROM users ORDER BY created_at DESC LIMIT 20'
             )->fetchAll() ?: [];
 
+            $transfers = $pdo->query(
+                'SELECT id, device_id, from_checkout_id, from_user_id, to_user_id, target_project_id, target_due_at,
+                        transfer_type, status, note, requested_at, confirmed_at
+                 FROM device_transfers
+                 ORDER BY requested_at DESC
+                 LIMIT 20'
+            )->fetchAll() ?: [];
+
             $payload = [
                 'projects' => $projects,
                 'devices' => $devices,
@@ -65,6 +73,7 @@ final class DashboardController extends Controller
                 'checkouts' => $checkouts,
                 'notifications' => $notifications,
                 'users' => $users,
+                'transfers' => $transfers,
             ];
 
             header('Content-Type: application/json');
