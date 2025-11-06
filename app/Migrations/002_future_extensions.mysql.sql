@@ -1,0 +1,34 @@
+-- TODO: Define schema for future features.
+
+-- Penalties table (track overdue incidents)
+-- CREATE TABLE penalties (
+--     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+--     user_id BIGINT UNSIGNED NOT NULL,
+--     checkout_id BIGINT UNSIGNED NOT NULL,
+--     incurred_at DATETIME NOT NULL,
+--     severity ENUM('minor', 'major') NOT NULL,
+--     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+-- );
+
+-- Extensions table (pending / approved extensions)
+-- CREATE TABLE extensions (
+--     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+--     checkout_id BIGINT UNSIGNED NOT NULL,
+--     requested_by BIGINT UNSIGNED NOT NULL,
+--     approved_by BIGINT UNSIGNED NULL,
+--     requested_due_at DATETIME NOT NULL,
+--     approved_due_at DATETIME NULL,
+--     status ENUM('pending', 'approved', 'rejected') NOT NULL DEFAULT 'pending',
+--     reason TEXT NULL,
+--     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+-- );
+
+-- Transfers table (device ownership hand-off)
+-- CREATE TABLE transfers (
+--     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+--     device_id BIGINT UNSIGNED NOT NULL,
+--     from_user_id BIGINT UNSIGNED NOT NULL,
+--     to_user_id BIGINT UNSIGNED NOT NULL,
+--     status ENUM('pending', 'confirmed', 'cancelled') NOT NULL DEFAULT 'pending',
+--     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+-- );
