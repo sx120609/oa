@@ -17,54 +17,13 @@ final class DashboardController extends Controller
             $pdo = DB::connection();
             $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 
-            $projects = $pdo->query(
-                'SELECT id, name, location, status, starts_at, due_at, quote_amount, note, created_at
-                 FROM projects ORDER BY created_at DESC LIMIT 10'
-            )->fetchAll() ?: [];
-
-            $devices = $pdo->query(
-                'SELECT id, code, model, status, serial, photo_url, created_at
-                 FROM devices ORDER BY created_at DESC LIMIT 10'
-            )->fetchAll() ?: [];
-
-            $reservations = $pdo->query(
-                'SELECT r.id, r.project_id, r.device_id, r.reserved_from, r.reserved_to, r.created_at,
-                        p.name AS project_name, d.code AS device_code
-                 FROM reservations r
-                 LEFT JOIN projects p ON p.id = r.project_id
-                 LEFT JOIN devices d ON d.id = r.device_id
-                 ORDER BY r.reserved_from DESC
-                 LIMIT 10'
-            )->fetchAll() ?: [];
-
-            $checkouts = $pdo->query(
-                'SELECT c.id, c.project_id, c.device_id, c.user_id, c.checked_out_at, c.due_at, c.return_at, c.note, c.created_at,
-                        p.name AS project_name, d.code AS device_code
-                 FROM checkouts c
-                 LEFT JOIN projects p ON p.id = c.project_id
-                 LEFT JOIN devices d ON d.id = c.device_id
-                 ORDER BY c.checked_out_at DESC
-                 LIMIT 10'
-            )->fetchAll() ?: [];
-
-            $notifications = $pdo->query(
-                'SELECT id, user_id, title, body, not_before, delivered_at, created_at
-                 FROM notifications
-                 ORDER BY created_at DESC
-                 LIMIT 10'
-            )->fetchAll() ?: [];
-
-            $users = $pdo->query(
-                'SELECT id, name, email, role, created_at FROM users ORDER BY created_at DESC LIMIT 20'
-            )->fetchAll() ?: [];
-
-            $transfers = $pdo->query(
-                'SELECT id, device_id, from_checkout_id, from_user_id, to_user_id, target_project_id, target_due_at,
-                        transfer_type, status, note, requested_at, confirmed_at
-                 FROM device_transfers
-                 ORDER BY requested_at DESC
-                 LIMIT 20'
-            )->fetchAll() ?: [];
+            $projects = $this->fetchProjects($pdo);
+            $devices = $this->fetchDevices($pdo);
+            $reservations = $this->fetchReservations($pdo);
+            $checkouts = $this->fetchCheckouts($pdo);
+            $notifications = $this->fetchNotifications($pdo);
+            $users = $this->fetchUsers($pdo);
+            $transfers = $this->fetchTransfers($pdo);
 
             $payload = [
                 'projects' => $projects,
@@ -87,6 +46,176 @@ final class DashboardController extends Controller
                 'success' => false,
                 'message' => '数据加载失败：' . $exception->getMessage(),
             ], JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+        }
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function fetchProjects(PDO $pdo): array
+    {
+        try {
+            $rows = $pdo->query('SELECT * FROM projects ORDER BY created_at DESC LIMIT 50')->fetchAll() ?: [];
+        } catch (PDOException $exception) {
+            error_log('API load projects failed: ' . $exception->getMessage());
+            return [];
+        }
+
+        return array_map(static fn(array $row): array => [
+            'id' => $row['id'] ?? null,
+            'name' => $row['name'] ?? null,
+            'location' => $row['location'] ?? null,
+            'status' => $row['status'] ?? null,
+            'starts_at' => $row['starts_at'] ?? null,
+            'due_at' => $row['due_at'] ?? null,
+            'quote_amount' => $row['quote_amount'] ?? null,
+            'note' => $row['note'] ?? null,
+            'created_at' => $row['created_at'] ?? null,
+        ], $rows);
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function fetchDevices(PDO $pdo): array
+    {
+        try {
+            $rows = $pdo->query('SELECT * FROM devices ORDER BY created_at DESC LIMIT 50')->fetchAll() ?: [];
+        } catch (PDOException $exception) {
+            error_log('API load devices failed: ' . $exception->getMessage());
+            return [];
+        }
+
+        return array_map(static fn(array $row): array => [
+            'id' => $row['id'] ?? null,
+            'code' => $row['code'] ?? null,
+            'model' => $row['model'] ?? null,
+            'status' => $row['status'] ?? null,
+            'serial' => $row['serial'] ?? null,
+            'photo_url' => $row['photo_url'] ?? null,
+            'created_at' => $row['created_at'] ?? null,
+        ], $rows);
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function fetchReservations(PDO $pdo): array
+    {
+        try {
+            $rows = $pdo->query(
+                'SELECT r.*, p.name AS project_name, d.code AS device_code
+                 FROM reservations r
+                 LEFT JOIN projects p ON p.id = r.project_id
+                 LEFT JOIN devices d ON d.id = r.device_id
+                 ORDER BY r.reserved_from DESC
+                 LIMIT 50'
+            )->fetchAll() ?: [];
+        } catch (PDOException $exception) {
+            error_log('API load reservations failed: ' . $exception->getMessage());
+            return [];
+        }
+
+        return array_map(static fn(array $row): array => [
+            'id' => $row['id'] ?? null,
+            'project_id' => $row['project_id'] ?? null,
+            'device_id' => $row['device_id'] ?? null,
+            'reserved_from' => $row['reserved_from'] ?? null,
+            'reserved_to' => $row['reserved_to'] ?? null,
+            'created_at' => $row['created_at'] ?? null,
+            'project_name' => $row['project_name'] ?? null,
+            'device_code' => $row['device_code'] ?? null,
+        ], $rows);
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function fetchCheckouts(PDO $pdo): array
+    {
+        try {
+            $rows = $pdo->query(
+                'SELECT c.*, p.name AS project_name, d.code AS device_code
+                 FROM checkouts c
+                 LEFT JOIN projects p ON p.id = c.project_id
+                 LEFT JOIN devices d ON d.id = c.device_id
+                 ORDER BY c.checked_out_at DESC
+                 LIMIT 50'
+            )->fetchAll() ?: [];
+        } catch (PDOException $exception) {
+            error_log('API load checkouts failed: ' . $exception->getMessage());
+            return [];
+        }
+
+        return array_map(static fn(array $row): array => [
+            'id' => $row['id'] ?? null,
+            'project_id' => $row['project_id'] ?? null,
+            'device_id' => $row['device_id'] ?? null,
+            'user_id' => $row['user_id'] ?? null,
+            'checked_out_at' => $row['checked_out_at'] ?? null,
+            'due_at' => $row['due_at'] ?? null,
+            'return_at' => $row['return_at'] ?? null,
+            'note' => $row['note'] ?? null,
+            'checkout_photo' => $row['checkout_photo'] ?? null,
+            'return_photo' => $row['return_photo'] ?? null,
+            'created_at' => $row['created_at'] ?? null,
+            'project_name' => $row['project_name'] ?? null,
+            'device_code' => $row['device_code'] ?? null,
+        ], $rows);
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function fetchNotifications(PDO $pdo): array
+    {
+        try {
+            $rows = $pdo->query(
+                'SELECT * FROM notifications ORDER BY created_at DESC LIMIT 50'
+            )->fetchAll() ?: [];
+        } catch (PDOException $exception) {
+            error_log('API load notifications failed: ' . $exception->getMessage());
+            return [];
+        }
+
+        return array_map(static fn(array $row): array => [
+            'id' => $row['id'] ?? null,
+            'user_id' => $row['user_id'] ?? null,
+            'title' => $row['title'] ?? null,
+            'body' => $row['body'] ?? null,
+            'not_before' => $row['not_before'] ?? null,
+            'delivered_at' => $row['delivered_at'] ?? null,
+            'created_at' => $row['created_at'] ?? null,
+        ], $rows);
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function fetchUsers(PDO $pdo): array
+    {
+        try {
+            return $pdo->query(
+                'SELECT id, name, email, role, created_at FROM users ORDER BY created_at DESC LIMIT 50'
+            )->fetchAll() ?: [];
+        } catch (PDOException $exception) {
+            error_log('API load users failed: ' . $exception->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function fetchTransfers(PDO $pdo): array
+    {
+        try {
+            return $pdo->query(
+                'SELECT * FROM device_transfers ORDER BY requested_at DESC LIMIT 50'
+            )->fetchAll() ?: [];
+        } catch (PDOException $exception) {
+            error_log('API load transfers failed: ' . $exception->getMessage());
+            return [];
         }
     }
 }
