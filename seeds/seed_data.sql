@@ -1,9 +1,9 @@
 -- Seed data for demo maintenance system.
 INSERT INTO user (username, password_hash, role) VALUES
-('dispatcher', '$2y$10$dispatcherhash', 'dispatcher'),
-('tech', '$2y$10$techhash', 'tech'),
-('wh', '$2y$10$whhash', 'wh'),
-('viewer', '$2y$10$viewerhash', 'viewer');
+('dispatcher', '$2y$12$xjeHi5sIKK.SkITY2JE6ueatG10qlfDvzwYXZARuWXrcwvDRsS6f6', 'dispatcher'),
+('tech', '$2y$12$wZpSgB8slyYrBsF65Yny6Op8Wqaj0vPRiQRU.SzKaL9DULCoZXCfe', 'tech'),
+('wh', '$2y$12$er4lAZfbkyTZKfh1R06ynuap7HOqLdKT3fnW4FPeC3V3gmhbcQCUW', 'wh'),
+('viewer', '$2y$12$gziP3ebXtCxFtrFrga.5GuaaSedT0GZi52evCm259zjRrgqBLsK8a', 'viewer');
 
 INSERT INTO asset (code, name, model, location, status) VALUES
 ('AS-1001', 'Air Handler 1', 'AHU-200', 'Building A', 'active'),
@@ -39,7 +39,7 @@ INSERT INTO ticket (asset_id, symptom, severity, status, photos, created_at) VAL
 
 INSERT INTO work_order (ticket_id, asset_id, priority, assignee_id, status, sla_start, sla_deadline, labor_minutes, result, created_at) VALUES
 (1, 1, 2, 2, 'IN_PROGRESS', NOW(), DATE_ADD(NOW(), INTERVAL 4 HOUR), 30, NULL, NOW()),
-(2, 3, 1, 2, 'PENDING_QA', NOW(), DATE_ADD(NOW(), INTERVAL 6 HOUR), 90, '更换滤芯并校准传感器', NOW());
+(2, 3, 1, 2, 'PENDING_QA', NOW(), DATE_ADD(NOW(), INTERVAL 6 HOUR), 90, '{"tech_result":"更换滤芯并校准传感器","labor_minutes":90,"completed_at":"2023-01-01T10:00:00"}', NOW());
 
 INSERT INTO inv_txn (spare_id, work_order_id, qty, type, created_at) VALUES
 (2, 2, 1, 'issue', NOW());
