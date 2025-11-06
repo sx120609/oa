@@ -9,6 +9,7 @@ use App\Services\PenaltyService;
 use App\Utils\DB;
 use App\Utils\HttpException;
 use App\Utils\Response;
+use PDO;
 use PDOException;
 
 final class DeviceFlowController extends Controller
@@ -328,13 +329,200 @@ final class DeviceFlowController extends Controller
 
     public function transferRequest(): string
     {
-        // TODO: Implement device transfer request flow (set status to transfer_pending and create transfer record).
-        return Response::error('功能未实现', 501);
+        $actorId = $this->requireActor();
+
+        $deviceId = $this->requirePositiveInt('device_id');
+        $toUserId = $this->requirePositiveInt('to_user_id');
+        if ($toUserId === $actorId) {
+            throw new HttpException('接收人与当前持有者不能相同', 409);
+        }
+
+        $projectId = $this->optionalPositiveInt('project_id');
+        $dueAtTs = $this->timestampFromPost('due_at', false);
+        $dueAt = $dueAtTs ? date('Y-m-d H:i:s', $dueAtTs) : null;
+        $note = $this->optionalString('note');
+
+        $pdo = DB::connection();
+
+        try {
+            $pdo->beginTransaction();
+
+            $existingPending = $pdo->prepare(
+                'SELECT id FROM device_transfers WHERE device_id = :device_id AND status = "pending" LIMIT 1'
+            );
+            $existingPending->execute([':device_id' => $deviceId]);
+            if ($existingPending->fetchColumn()) {
+                throw new HttpException('存在待确认的转交请求', 409);
+            }
+
+            $checkoutStmt = $pdo->prepare(
+                'SELECT * FROM checkouts WHERE device_id = :device_id AND return_at IS NULL ORDER BY checked_out_at DESC LIMIT 1 FOR UPDATE'
+            );
+            $checkoutStmt->execute([':device_id' => $deviceId]);
+            $checkout = $checkoutStmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$checkout) {
+                throw new HttpException('当前设备未借出，无法发起转交', 409);
+            }
+            if ((int) $checkout['user_id'] !== $actorId) {
+                throw new HttpException('只有当前借用人可以发起转交', 409);
+            }
+
+            $insert = $pdo->prepare(
+                'INSERT INTO device_transfers (device_id, from_checkout_id, from_user_id, to_user_id, target_project_id, target_due_at, transfer_type, status, note, requested_at)
+                 VALUES (:device_id, :from_checkout_id, :from_user_id, :to_user_id, :target_project_id, :target_due_at, :transfer_type, "pending", :note, NOW())'
+            );
+            $insert->execute([
+                ':device_id' => $deviceId,
+                ':from_checkout_id' => $checkout['id'],
+                ':from_user_id' => $actorId,
+                ':to_user_id' => $toUserId,
+                ':target_project_id' => $projectId,
+                ':target_due_at' => $dueAt,
+                ':transfer_type' => 'checkout',
+                ':note' => $note,
+            ]);
+
+            $updateDevice = $pdo->prepare('UPDATE devices SET status = :status WHERE id = :device_id');
+            $updateDevice->execute([
+                ':status' => 'transfer_pending',
+                ':device_id' => $deviceId,
+            ]);
+
+            $pdo->commit();
+        } catch (HttpException $exception) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $exception;
+        } catch (PDOException $exception) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw new HttpException('转交申请失败', 500, $exception);
+        }
+
+        AuditLogger::log($actorId, 'device', $deviceId, 'transfer_request', [
+            'to_user' => $toUserId,
+            'project' => $projectId,
+            'due_at' => $dueAt,
+            'note' => $note,
+        ]);
+
+        return Response::ok();
     }
 
     public function transferConfirm(): string
     {
-        // TODO: Implement device transfer confirmation flow (revert status to checked_out and reset countdown policy).
-        return Response::error('功能未实现', 501);
+        $actorId = $this->requireActor();
+        $transferId = $this->requirePositiveInt('transfer_id');
+
+        $projectIdOverride = $this->optionalPositiveInt('project_id');
+        $dueAtOverrideTs = $this->timestampFromPost('due_at', false);
+        $dueAtOverride = $dueAtOverrideTs ? date('Y-m-d H:i:s', $dueAtOverrideTs) : null;
+        $note = $this->optionalString('note');
+
+        $pdo = DB::connection();
+
+        $transfer = null;
+        $projectId = $projectIdOverride ?? null;
+        $dueAt = $dueAtOverride;
+
+        try {
+            $pdo->beginTransaction();
+
+            $transferStmt = $pdo->prepare(
+                'SELECT * FROM device_transfers WHERE id = :id FOR UPDATE'
+            );
+            $transferStmt->execute([':id' => $transferId]);
+            $transfer = $transferStmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$transfer) {
+                throw new HttpException('转交请求不存在', 404);
+            }
+            if ($transfer['status'] !== 'pending') {
+                throw new HttpException('转交请求已处理', 409);
+            }
+            if ((int) $transfer['to_user_id'] !== $actorId) {
+                throw new HttpException('只有接收人可以确认转交', 403);
+            }
+
+            $checkoutStmt = $pdo->prepare(
+                'SELECT * FROM checkouts WHERE id = :id FOR UPDATE'
+            );
+            $checkoutStmt->execute([':id' => $transfer['from_checkout_id']]);
+            $checkout = $checkoutStmt->fetch(PDO::FETCH_ASSOC);
+            if (!$checkout || $checkout['return_at'] !== null) {
+                throw new HttpException('原借用记录不存在或已结束', 409);
+            }
+
+            $projectId = $projectIdOverride ?? ($transfer['target_project_id'] ? (int) $transfer['target_project_id'] : null);
+            if ($projectId === null && $checkout['project_id']) {
+                $projectId = (int) $checkout['project_id'];
+            }
+
+            $dueAt = $dueAtOverride ?? ($transfer['target_due_at'] ?: $checkout['due_at']);
+            if (!$dueAt) {
+                throw new HttpException('缺少新的归还时间', 409);
+            }
+
+            $receiveAt = date('Y-m-d H:i:s');
+
+            $closeCheckout = $pdo->prepare(
+                'UPDATE checkouts SET return_at = :return_at WHERE id = :id'
+            );
+            $closeCheckout->execute([
+                ':return_at' => $receiveAt,
+                ':id' => $checkout['id'],
+            ]);
+
+            $newCheckout = $pdo->prepare(
+                'INSERT INTO checkouts (project_id, device_id, user_id, checked_out_at, due_at, return_at, checkout_photo, note, created_at)
+                 VALUES (:project_id, :device_id, :user_id, :checked_out_at, :due_at, NULL, NULL, :note, NOW())'
+            );
+            $newCheckout->execute([
+                ':project_id' => $projectId,
+                ':device_id' => $transfer['device_id'],
+                ':user_id' => $transfer['to_user_id'],
+                ':checked_out_at' => $receiveAt,
+                ':due_at' => $dueAt,
+                ':note' => $note ? "转交接收：{$note}" : null,
+            ]);
+
+            $updateTransfer = $pdo->prepare(
+                'UPDATE device_transfers SET status = "accepted", confirmed_at = NOW(), target_project_id = :project_id, target_due_at = :due_at WHERE id = :id'
+            );
+            $updateTransfer->execute([
+                ':project_id' => $projectId,
+                ':due_at' => $dueAt,
+                ':id' => $transfer['id'],
+            ]);
+
+            $updateDevice = $pdo->prepare('UPDATE devices SET status = :status WHERE id = :device_id');
+            $updateDevice->execute([
+                ':status' => 'checked_out',
+                ':device_id' => $transfer['device_id'],
+            ]);
+
+            $pdo->commit();
+        } catch (HttpException $exception) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $exception;
+        } catch (PDOException $exception) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw new HttpException('确认转交失败', 500, $exception);
+        }
+
+        AuditLogger::log($actorId, 'device', (int) ($transfer['device_id'] ?? 0), 'transfer_confirm', [
+            'from_user' => $transfer['from_user_id'] ?? null,
+            'project' => $projectId,
+            'due_at' => $dueAt,
+        ]);
+
+        return Response::ok();
     }
 }

@@ -98,6 +98,7 @@
             <button class="nav-link" data-tab="devices">设备管理</button>
             <button class="nav-link" data-tab="reservations">预留管理</button>
             <button class="nav-link" data-tab="checkouts">借用管理</button>
+            <button class="nav-link" data-tab="transfers">设备转交</button>
             <button class="nav-link" data-tab="notifications">通知中心</button>
         </div>
     </aside>
@@ -134,6 +135,7 @@
                 <button class="tab-btn" data-tab="devices">设备</button>
                 <button class="tab-btn" data-tab="reservations">预留</button>
                 <button class="tab-btn" data-tab="checkouts">借用</button>
+                <button class="tab-btn" data-tab="transfers">转交</button>
                 <button class="tab-btn" data-tab="notifications">通知</button>
             </div>
             <section class="tab-content active" data-tab-content="overview">
@@ -143,6 +145,7 @@
                     <div class="stat-card"><h3>设备数量</h3><strong data-stat-count="devices">0</strong><span>全部状态</span></div>
                     <div class="stat-card"><h3>预留记录</h3><strong data-stat-count="reservations">0</strong><span>时间窗口</span></div>
                     <div class="stat-card"><h3>借用记录</h3><strong data-stat-count="checkouts">0</strong><span>借出与归还</span></div>
+                    <div class="stat-card"><h3>待转交</h3><strong data-stat-count="transfers">0</strong><span>待确认的转交</span></div>
                     <div class="stat-card"><h3>通知数量</h3><strong data-stat-count="notifications">0</strong><span>提醒与告警</span></div>
                 </div>
             </section>
@@ -272,6 +275,38 @@
                     </form>
                 </div>
             </section>
+            <section class="tab-content" data-tab-content="transfers">
+                <div class="section-title"><h2>转交请求</h2><span class="badge" data-count-badge="transfers">共 0 条</span></div>
+                <div class="data-table-wrapper">
+                    <table class="data-table"><thead><tr><th>ID</th><th>设备</th><th>当前持有者</th><th>接收人</th><th>目标项目</th><th>目标归还时间</th><th>状态</th><th>发起时间</th></tr></thead><tbody data-table-body="transfers"></tbody></table>
+                </div>
+                <p class="empty-placeholder" data-empty="transfers">暂无转交请求。</p>
+                <div class="form-card">
+                    <h4>发起转交</h4>
+                    <form method="post" action="/transfers/request" data-ajax="true">
+                        <?= csrf_field() ?>
+                        <label>设备 ID<input type="number" name="device_id" min="1" required></label>
+                        <label>接收用户 ID<input type="number" name="to_user_id" min="1" required></label>
+                        <label>新项目 ID（可选）<input type="number" name="project_id" min="1"></label>
+                        <label>新的归还时间（可选）<input type="datetime-local" name="due_at"></label>
+                        <label>备注（可选）<textarea name="note"></textarea></label>
+                        <button type="submit">提交转交请求</button>
+                        <div class="form-result" data-result></div>
+                    </form>
+                </div>
+                <div class="form-card">
+                    <h4>确认转交</h4>
+                    <form method="post" action="/transfers/confirm" data-ajax="true">
+                        <?= csrf_field() ?>
+                        <label>转交请求 ID<input type="number" name="transfer_id" min="1" required></label>
+                        <label>目标项目 ID（可选）<input type="number" name="project_id" min="1"></label>
+                        <label>新的归还时间（可选）<input type="datetime-local" name="due_at"></label>
+                        <label>备注（可选）<textarea name="note"></textarea></label>
+                        <button type="submit">确认接收</button>
+                        <div class="form-result" data-result></div>
+                    </form>
+                </div>
+            </section>
             <section class="tab-content" data-tab-content="notifications">
                 <div class="section-title"><h2>通知中心</h2><span class="badge" data-count-badge="notifications">共 0 条</span></div>
                 <div class="data-table-wrapper">
@@ -360,6 +395,21 @@
                     <td><button type="button" class="action-btn delete" data-delete-user="${row.id ?? ''}">删除</button></td>
                 </tr>
             `,
+            transfers: (row) => {
+                const statusMap = { pending: '待确认', accepted: '已完成', rejected: '已拒绝', cancelled: '已取消' };
+                return `
+                    <tr>
+                        <td>${row.id ?? '-'}</td>
+                        <td>#${row.device_id ?? '-'}</td>
+                        <td>#${row.from_user_id ?? '-'}</td>
+                        <td>#${row.to_user_id ?? '-'}</td>
+                        <td>${row.target_project_id ? '#' + row.target_project_id : '-'}</td>
+                        <td>${formatDate(row.target_due_at ?? null)}</td>
+                        <td>${statusMap[row.status ?? ''] ?? (row.status ?? '-')}</td>
+                        <td>${formatDate(row.requested_at ?? null)}</td>
+                    </tr>
+                `;
+            },
             projects: (row) => `
                 <tr>
                     <td>${row.id ?? '-'}</td>
@@ -435,6 +485,7 @@
             renderTable('devices', data.devices ?? []);
             renderTable('reservations', data.reservations ?? []);
             renderTable('checkouts', data.checkouts ?? []);
+            renderTable('transfers', data.transfers ?? []);
             renderTable('notifications', data.notifications ?? []);
         } catch (error) {
             console.error('加载数据失败', error);
@@ -499,6 +550,7 @@
                     devices: '设备管理',
                     reservations: '预留管理',
                     checkouts: '借用管理',
+                    transfers: '设备转交',
                     notifications: '通知中心',
                 };
                 breadcrumb.textContent = map[tab] ?? '数据概览';
