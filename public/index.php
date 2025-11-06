@@ -54,6 +54,7 @@ $router->post('/transfers/request', 'DeviceFlowController@transferRequest');
 $router->post('/transfers/confirm', 'DeviceFlowController@transferConfirm');
 $router->post('/extensions/request', 'ExtensionController@request');
 $router->post('/extensions/approve', 'ExtensionController@approve');
+$router->get('/dashboard/data', 'DashboardController@summary');
 
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
