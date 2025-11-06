@@ -35,6 +35,13 @@ future_iso() {
   fi
 }
 
+info "Preparing database schema"
+mysql_exec -e "CREATE DATABASE IF NOT EXISTS \`${MYSQL_DB}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
+USERS_TABLE=$(mysql_exec -N -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='${MYSQL_DB}' AND table_name='users'")
+if [ "${USERS_TABLE}" -eq 0 ]; then
+  mysql_db < app/Migrations/001_init.mysql.sql
+fi
+
 # 1. Seed user (manual DB insert)
 info "Seeding users table"
 cat > "$TMP_SQL" <<'SQL'
