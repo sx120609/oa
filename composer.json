@@ -1,0 +1,11 @@
+{
+    "name": "demo/maintenance-platform",
+    "description": "Demo maintenance workflow skeleton",
+    "type": "project",
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    }
+}
