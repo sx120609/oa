@@ -25,252 +25,62 @@
             --warning: #f59e0b;
         }
         * { box-sizing: border-box; }
-        body {
-            margin: 0;
-            min-height: 100vh;
-            font-family: "Inter", "PingFang SC", "Microsoft YaHei", sans-serif;
-            background: var(--bg);
-            color: var(--text);
-        }
-        .app {
-            display: flex;
-            min-height: 100vh;
-        }
-        .sidebar {
-            width: 240px;
-            background: var(--sidebar);
-            color: var(--sidebar-text);
-            display: flex;
-            flex-direction: column;
-            padding: 1.5rem 1rem;
-            gap: 2rem;
-        }
-        .sidebar .logo {
-            font-size: 1.3rem;
-            font-weight: 700;
-            letter-spacing: 0.06em;
-            text-align: center;
-        }
-        .nav-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-        .nav-title {
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            color: rgba(229, 231, 235, 0.65);
-            margin-bottom: 0.2rem;
-            padding: 0 0.75rem;
-        }
-        .nav-link {
-            appearance: none;
-            border: none;
-            background: transparent;
-            color: inherit;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            width: 100%;
-            font-size: 0.95rem;
-            padding: 0.7rem 0.9rem;
-            border-radius: 0.75rem;
-            cursor: pointer;
-            transition: background 0.18s ease, color 0.18s ease;
-        }
-        .nav-link:hover {
-            background: rgba(255, 255, 255, 0.08);
-        }
-        .nav-link.active {
-            background: rgba(59, 130, 246, 0.18);
-            color: #ffffff;
-        }
-        .content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            padding: 0 2.5rem 2.5rem;
-        }
-        .topbar {
-            padding: 1.5rem 0;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1.5rem;
-        }
-        .breadcrumb {
-            display: flex;
-            align-items: center;
-            gap: 0.65rem;
-            font-size: 0.95rem;
-            color: var(--muted);
-        }
-        .top-actions {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-        .top-actions button {
-            background: var(--primary);
-            color: #fff;
-            border: none;
-            border-radius: 0.75rem;
-            padding: 0.55rem 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.15s ease, box-shadow 0.15s ease;
-        }
-        .top-actions button:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 12px 20px rgba(37, 99, 235, 0.2);
-        }
-        .login-card {
-            background: #ffffff;
-            border: 1px solid var(--border);
-            border-radius: 1rem;
-            padding: 1rem 1.2rem;
-            box-shadow: 0 10px 22px rgba(15, 23, 42, 0.08);
-            display: flex;
-            align-items: center;
-            gap: 0.8rem;
-        }
-        .login-card form {
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
-        }
-        .login-card input {
-            border: 1px solid var(--border);
-            border-radius: 0.6rem;
-            padding: 0.45rem 0.6rem;
-            font-size: 0.9rem;
-        }
-        .login-card button {
-            background: var(--primary);
-            color: #fff;
-            border: none;
-            border-radius: 0.6rem;
-            padding: 0.45rem 0.75rem;
-            font-size: 0.9rem;
-            font-weight: 600;
-            cursor: pointer;
-        }
-        .tabs-container {
-            background: #ffffff;
-            border: 1px solid var(--border);
-            border-radius: 1.2rem;
-            box-shadow: 0 12px 26px rgba(15, 23, 42, 0.12);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-        .tabs-header {
-            display: flex;
-            align-items: center;
-            gap: 0.25rem;
-            border-bottom: 1px solid var(--border);
-            background: #f9fafb;
-            padding: 0.35rem 0.6rem;
-        }
-        .tab-btn {
-            appearance: none;
-            border: none;
-            background: transparent;
-            padding: 0.75rem 1.35rem;
-            border-radius: 0.9rem;
-            font-size: 0.95rem;
-            font-weight: 600;
-            color: var(--muted);
-            cursor: pointer;
-            transition: background 0.15s ease, color 0.15s ease;
-        }
-        .tab-btn:hover {
-            background: rgba(37, 99, 235, 0.12);
-            color: var(--primary);
-        }
-        .tab-btn.active {
-            background: #ffffff;
-            color: var(--primary);
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
-        }
-        .tab-content {
-            display: none;
-            padding: 1.8rem;
-        }
-        .tab-content.active {
-            display: block;
-        }
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 1.2rem;
-        }
-        .stat-card {
-            background: var(--primary-light);
-            border-radius: 1rem;
-            padding: 1.2rem;
-            display: grid;
-            gap: 0.4rem;
-        }
-        .stat-card h3 {
-            margin: 0;
-            font-size: 0.9rem;
-            color: var(--primary);
-        }
-        .stat-card strong {
-            font-size: 1.8rem;
-        }
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.92rem;
-            margin-top: 1.2rem;
-        }
-        .data-table thead {
-            background: #f8fafc;
-        }
-        .data-table th, .data-table td {
-            padding: 0.65rem 0.9rem;
-            border-bottom: 1px solid var(--border);
-            text-align: left;
-        }
-        .status-chip {
-            display: inline-block;
-            padding: 0.2rem 0.55rem;
-            border-radius: 999px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-        .status-chip.success { background: rgba(22, 163, 74, 0.12); color: var(--success); }
-        .status-chip.warning { background: rgba(245, 158, 11, 0.12); color: var(--warning); }
-        .status-chip.danger { background: rgba(239, 68, 68, 0.12); color: var(--danger); }
-        .form-card {
-            background: #f9fafb;
-            border: 1px solid var(--border);
-            border-radius: 1rem;
-            padding: 1.4rem;
-            margin-top: 1.5rem;
-            display: grid;
-            gap: 0.85rem;
-        }
+        body { margin: 0; min-height: 100vh; font-family: "Inter", "PingFang SC", "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); }
+        .app { display: flex; min-height: 100vh; }
+        .sidebar { width: 240px; background: var(--sidebar); color: var(--sidebar-text); display: flex; flex-direction: column; padding: 1.5rem 1rem; gap: 2rem; }
+        .sidebar .logo { font-size: 1.3rem; font-weight: 700; letter-spacing: 0.06em; text-align: center; }
+        .nav-group { display: flex; flex-direction: column; gap: 0.5rem; }
+        .nav-title { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(229, 231, 235, 0.65); margin-bottom: 0.2rem; padding: 0 0.75rem; }
+        .nav-link { appearance: none; border: none; background: transparent; color: inherit; display: flex; align-items: center; justify-content: space-between; width: 100%; font-size: 0.95rem; padding: 0.7rem 0.9rem; border-radius: 0.75rem; cursor: pointer; transition: background 0.18s ease, color 0.18s ease; }
+        .nav-link:hover { background: rgba(255, 255, 255, 0.08); }
+        .nav-link.active { background: rgba(59, 130, 246, 0.18); color: #ffffff; }
+        .content { flex: 1; display: flex; flex-direction: column; padding: 0 2.5rem 2.5rem; }
+        .content[data-login-state="guest"] .tabs-container,
+        .content[data-login-state="guest"] .tabs-header,
+        .content[data-login-state="guest"] .tab-content { display: none !important; }
+        .topbar { padding: 1.5rem 0; display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; }
+        .breadcrumb { display: flex; align-items: center; gap: 0.65rem; font-size: 0.95rem; color: var(--muted); }
+        .top-actions { display: flex; align-items: center; gap: 1rem; }
+        .top-actions button { background: var(--primary); color: #fff; border: none; border-radius: 0.75rem; padding: 0.55rem 1.1rem; font-weight: 600; cursor: pointer; transition: transform 0.15s ease, box-shadow 0.15s ease; }
+        .top-actions button:hover { transform: translateY(-1px); box-shadow: 0 12px 20px rgba(37, 99, 235, 0.2); }
+        .login-card { background: #ffffff; border: 1px solid var(--border); border-radius: 1rem; padding: 1rem 1.2rem; box-shadow: 0 10px 22px rgba(15, 23, 42, 0.08); display: flex; align-items: center; gap: 0.8rem; }
+        .login-card form { display: flex; align-items: center; gap: 0.6rem; }
+        .login-card input { border: 1px solid var(--border); border-radius: 0.6rem; padding: 0.45rem 0.6rem; font-size: 0.9rem; }
+        .login-card button { background: var(--primary); color: #fff; border: none; border-radius: 0.6rem; padding: 0.45rem 0.75rem; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
+        .tabs-container { background: #ffffff; border: 1px solid var(--border); border-radius: 1.2rem; box-shadow: 0 12px 26px rgba(15, 23, 42, 0.12); overflow: hidden; display: flex; flex-direction: column; }
+        .tabs-header { display: flex; align-items: center; gap: 0.25rem; border-bottom: 1px solid var(--border); background: #f9fafb; padding: 0.35rem 0.6rem; }
+        .tab-btn { appearance: none; border: none; background: transparent; padding: 0.75rem 1.35rem; border-radius: 0.9rem; font-size: 0.95rem; font-weight: 600; color: var(--muted); cursor: pointer; transition: background 0.15s ease, color 0.15s ease; }
+        .tab-btn:hover { background: rgba(37, 99, 235, 0.12); color: var(--primary); }
+        .tab-btn.active { background: #ffffff; color: var(--primary); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15); }
+        .tab-content { display: none; padding: 1.8rem; }
+        .tab-content.active { display: block; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.2rem; }
+        .stat-card { background: var(--primary-light); border-radius: 1rem; padding: 1.2rem; display: grid; gap: 0.4rem; }
+        .stat-card h3 { margin: 0; font-size: 0.9rem; color: var(--primary); }
+        .stat-card strong { font-size: 1.8rem; }
+        .section-title { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-bottom: 1.4rem; }
+        .section-title h2 { margin: 0; font-size: 1.3rem; letter-spacing: 0.04em; }
+        .badge { background: rgba(148, 163, 184, 0.18); color: var(--text); padding: 0.3rem 0.85rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600; }
+        .data-table-wrapper { border-radius: 16px; overflow: hidden; border: 1px solid var(--border); }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+        .data-table th, .data-table td { padding: 0.65rem 0.9rem; border-bottom: 1px solid var(--border); text-align: left; }
+        .data-table thead { background: #f8fafc; }
+        .empty-placeholder { margin-top: 1rem; color: var(--muted); font-size: 0.9rem; }
+        .form-card { background: #f9fafb; border: 1px solid var(--border); border-radius: 1rem; padding: 1.4rem; margin-top: 1.5rem; display: grid; gap: 0.85rem; }
         .form-card h4 { margin: 0; font-size: 1rem; }
         .form-card label { display: grid; gap: 0.35rem; font-size: 0.9rem; }
-        .form-card input, .form-card textarea {
-            border: 1px solid var(--border);
-            border-radius: 0.7rem;
-            padding: 0.55rem 0.7rem;
-            font-size: 0.95rem;
-        }
+        .form-card input, .form-card textarea, .form-card select { border: 1px solid var(--border); border-radius: 0.7rem; padding: 0.55rem 0.7rem; font-size: 0.95rem; }
         .form-result { border-radius: 0.75rem; padding: 0.5rem 0.75rem; font-size: 0.9rem; display: none; }
         .form-result.show { display: block; }
         .form-result.success { background: rgba(16, 185, 129, 0.15); color: var(--success); }
         .form-result.error { background: rgba(248, 113, 113, 0.15); color: var(--danger); }
-        .empty-placeholder { margin-top: 1rem; color: var(--muted); font-size: 0.9rem; }
+        .action-btn { border: none; border-radius: 0.6rem; padding: 0.35rem 0.65rem; font-size: 0.85rem; cursor: pointer; transition: opacity 0.15s ease; }
+        .action-btn.delete { background: rgba(239, 68, 68, 0.12); color: var(--danger); }
+        .action-btn.delete:hover { opacity: 0.75; }
         footer { padding: 1.6rem 3rem; text-align: center; color: var(--muted); font-size: 0.85rem; }
         @media (max-width: 800px) {
             .sidebar { display: none; }
-            .layout { padding: 0 1rem 2rem; }
+            .content { padding: 0 1rem 2rem; }
             .topbar { flex-direction: column; align-items: stretch; }
             .login-card { width: 100%; justify-content: space-between; }
         }
@@ -283,6 +93,7 @@
         <div class="nav-group">
             <div class="nav-title">数据中心</div>
             <button class="nav-link active" data-tab="overview">数据概览</button>
+            <button class="nav-link" data-tab="users">用户管理</button>
             <button class="nav-link" data-tab="projects">项目管理</button>
             <button class="nav-link" data-tab="devices">设备管理</button>
             <button class="nav-link" data-tab="reservations">预留管理</button>
@@ -299,7 +110,7 @@
             </div>
             <div class="top-actions">
                 <button type="button" onclick="window.dashboardRefresh && window.dashboardRefresh()">刷新数据</button>
-                <div class="login-card" data-auth-visible="guest">
+                <div class="login-card" data-auth-visible="guest" style="display:none;">
                     <form method="post" action="/login" data-ajax="true">
                         <?= csrf_field() ?>
                         <input type="email" name="email" placeholder="邮箱" required>
@@ -318,6 +129,7 @@
         <div class="tabs-container" data-auth-visible="authenticated" style="display:none;">
             <div class="tabs-header">
                 <button class="tab-btn active" data-tab="overview">总览</button>
+                <button class="tab-btn" data-tab="users">用户</button>
                 <button class="tab-btn" data-tab="projects">项目</button>
                 <button class="tab-btn" data-tab="devices">设备</button>
                 <button class="tab-btn" data-tab="reservations">预留</button>
@@ -326,19 +138,52 @@
             </div>
             <section class="tab-content active" data-tab-content="overview">
                 <div class="stats-grid">
-                    <div class="stat-card"><h3>项目总数</h3><strong data-stat-count="projects">0</strong><span>最近记录</span></div>
-                    <div class="stat-card"><h3>设备总数</h3><strong data-stat-count="devices">0</strong><span>涵盖全部状态</span></div>
-                    <div class="stat-card"><h3>预留记录</h3><strong data-stat-count="reservations">0</strong><span>最新预留条目</span></div>
-                    <div class="stat-card"><h3>借用记录</h3><strong data-stat-count="checkouts">0</strong><span>近期借用与归还</span></div>
+                    <div class="stat-card"><h3>用户总数</h3><strong data-stat-count="users">0</strong><span>最近注册</span></div>
+                    <div class="stat-card"><h3>项目总数</h3><strong data-stat-count="projects">0</strong><span>最新项目</span></div>
+                    <div class="stat-card"><h3>设备数量</h3><strong data-stat-count="devices">0</strong><span>全部状态</span></div>
+                    <div class="stat-card"><h3>预留记录</h3><strong data-stat-count="reservations">0</strong><span>时间窗口</span></div>
+                    <div class="stat-card"><h3>借用记录</h3><strong data-stat-count="checkouts">0</strong><span>借出与归还</span></div>
                     <div class="stat-card"><h3>通知数量</h3><strong data-stat-count="notifications">0</strong><span>提醒与告警</span></div>
                 </div>
             </section>
-            <section class="tab-content" data-tab-content="projects">
-                <div class="section-title">
-                    <h2>项目列表</h2><span class="badge" data-count-badge="projects">共 0 条</span>
-                </div>
+            <section class="tab-content" data-tab-content="users">
+                <div class="section-title"><h2>用户列表</h2><span class="badge" data-count-badge="users">共 0 条</span></div>
                 <div class="data-table-wrapper">
-                    <table class="data-table"><thead><tr><th>ID</th><th>名称</th><th>地点</th><th>状态</th><th>开始时间</th><th>交付时间</th><th>创建时间</th></tr></thead><tbody data-table-body="projects"></tbody></table>
+                    <table class="data-table">
+                        <thead>
+                        <tr><th>ID</th><th>姓名</th><th>邮箱</th><th>角色</th><th>创建时间</th><th>操作</th></tr>
+                        </thead>
+                        <tbody data-table-body="users"></tbody>
+                    </table>
+                </div>
+                <p class="empty-placeholder" data-empty="users">暂无用户记录。</p>
+                <div class="form-card">
+                    <h4>新增用户</h4>
+                    <form method="post" action="/users/create" data-ajax="true">
+                        <?= csrf_field() ?>
+                        <label>姓名<input type="text" name="name" required></label>
+                        <label>邮箱<input type="email" name="email" required></label>
+                        <label>密码<input type="password" name="password" required></label>
+                        <label>角色
+                            <select name="role" required>
+                                <option value="owner">负责人</option>
+                                <option value="asset_admin">资产管理员</option>
+                                <option value="planner">策划</option>
+                                <option value="photographer">摄影</option>
+                            </select>
+                        </label>
+                        <button type="submit">创建用户</button>
+                        <div class="form-result" data-result></div>
+                    </form>
+                </div>
+            </section>
+            <section class="tab-content" data-tab-content="projects">
+                <div class="section-title"><h2>项目列表</h2><span class="badge" data-count-badge="projects">共 0 条</span></div>
+                <div class="data-table-wrapper">
+                    <table class="data-table">
+                        <thead><tr><th>ID</th><th>名称</th><th>地点</th><th>状态</th><th>开始时间</th><th>交付时间</th><th>创建时间</th></tr></thead>
+                        <tbody data-table-body="projects"></tbody>
+                    </table>
                 </div>
                 <p class="empty-placeholder" data-empty="projects">暂无项目记录，请先创建一个项目。</p>
                 <div class="form-card">
@@ -445,26 +290,27 @@
 <script>
 (() => {
     const forms = document.querySelectorAll('form[data-ajax="true"]');
-    const authState = document.querySelector('.content')?.dataset.loginState;
-    document.querySelectorAll('[data-auth-visible]').forEach((block) => {
-        const state = block.getAttribute('data-auth-visible');
-        block.style.display = state === authState ? '' : 'none';
-    });
     const tabs = document.querySelectorAll('.nav-link, .tab-btn');
     const tabContents = document.querySelectorAll('.tab-content');
     const breadcrumb = document.getElementById('breadcrumb-label');
+    let authState = document.querySelector('.content')?.dataset.loginState || 'guest';
+
+    const syncAuthVisibility = () => {
+        document.querySelectorAll('[data-auth-visible]').forEach((block) => {
+            const state = block.getAttribute('data-auth-visible');
+            block.style.display = state === authState ? '' : 'none';
+        });
+    };
+
+    syncAuthVisibility();
+
+    let csrfToken = document.querySelector('form[data-ajax="true"] input[name="_token"]')?.value || '';
 
     const parseResponse = (text) => {
         const trimmed = text.trim();
-        if (!trimmed) {
-            return { type: 'error', message: '服务器未返回任何信息。' };
-        }
-        if (trimmed.toUpperCase().startsWith('OK')) {
-            return { type: 'success', message: trimmed };
-        }
-        if (trimmed.toUpperCase().startsWith('ERROR')) {
-            return { type: 'error', message: trimmed.replace(/^ERROR:\s*/i, '') };
-        }
+        if (!trimmed) { return { type: 'error', message: '服务器未返回任何信息。' }; }
+        if (trimmed.toUpperCase().startsWith('OK')) { return { type: 'success', message: trimmed }; }
+        if (trimmed.toUpperCase().startsWith('ERROR')) { return { type: 'error', message: trimmed.replace(/^ERROR:\s*/i, '') }; }
         return { type: 'info', message: trimmed };
     };
 
@@ -477,10 +323,7 @@
         body.innerHTML = '';
         if (badge) badge.textContent = `共 ${rows.length} 条`;
         if (statCount) statCount.textContent = rows.length;
-        if (!rows.length) {
-            if (emptyTip) emptyTip.style.display = '';
-            return;
-        }
+        if (!rows.length) { if (emptyTip) emptyTip.style.display = ''; return; }
         if (emptyTip) emptyTip.style.display = 'none';
 
         const formatDate = (value) => {
@@ -507,6 +350,16 @@
         };
 
         const builders = {
+            users: (row) => `
+                <tr>
+                    <td>${row.id ?? '-'}</td>
+                    <td>${row.name ?? '-'}</td>
+                    <td>${row.email ?? '-'}</td>
+                    <td>${row.role ?? '-'}</td>
+                    <td>${formatDate(row.created_at ?? null)}</td>
+                    <td><button type="button" class="action-btn delete" data-delete-user="${row.id ?? ''}">删除</button></td>
+                </tr>
+            `,
             projects: (row) => `
                 <tr>
                     <td>${row.id ?? '-'}</td>
@@ -573,14 +426,11 @@
                 headers: { 'X-Requested-With': 'XMLHttpRequest' },
                 credentials: 'same-origin',
             });
-            if (!res.ok) {
-                throw new Error(`HTTP ${res.status}`);
-            }
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const payload = await res.json();
-            if (!payload.success) {
-                throw new Error(payload.message ?? '数据加载失败');
-            }
+            if (!payload.success) throw new Error(payload.message ?? '数据加载失败');
             const data = payload.data ?? {};
+            renderTable('users', data.users ?? []);
             renderTable('projects', data.projects ?? []);
             renderTable('devices', data.devices ?? []);
             renderTable('reservations', data.reservations ?? []);
@@ -611,6 +461,7 @@
                 const currentToken = currentForm.querySelector('input[name="_token"]');
                 if (newToken && currentToken) {
                     currentToken.value = newToken.value;
+                    csrfToken = newToken.value;
                 }
             });
             const statusNew = doc.querySelector('[data-current-status]');
@@ -618,10 +469,20 @@
             if (statusNew && statusCurrent) {
                 statusCurrent.innerHTML = statusNew.innerHTML;
             }
+
+            const stateNew = doc.querySelector('.content')?.dataset.loginState || 'guest';
+            const content = document.querySelector('.content');
+            authState = stateNew;
+            if (content) {
+                content.dataset.loginState = authState;
+            }
+            syncAuthVisibility();
         } catch (error) {
             console.warn('刷新页面状态失败', error);
         } finally {
-            await loadDashboardData();
+            if (authState === 'authenticated') {
+                await loadDashboardData();
+            }
         }
     };
 
@@ -631,15 +492,16 @@
             tabs.forEach((item) => item.classList.toggle('active', item.getAttribute('data-tab') === tab));
             tabContents.forEach((section) => section.classList.toggle('active', section.getAttribute('data-tab-content') === tab));
             if (breadcrumb) {
-                const labelMap = {
+                const map = {
                     overview: '数据概览',
+                    users: '用户管理',
                     projects: '项目管理',
                     devices: '设备管理',
                     reservations: '预留管理',
                     checkouts: '借用管理',
                     notifications: '通知中心',
                 };
-                breadcrumb.textContent = labelMap[tab] ?? '数据概览';
+                breadcrumb.textContent = map[tab] ?? '数据概览';
             }
         });
     });
@@ -692,8 +554,39 @@
         });
     });
 
+    document.addEventListener('click', async (event) => {
+        const btn = event.target.closest('[data-delete-user]');
+        if (!btn) return;
+        const userId = btn.getAttribute('data-delete-user');
+        if (!userId || !confirm('确认删除该用户？')) {
+            return;
+        }
+        try {
+            const formData = new FormData();
+            formData.append('_token', csrfToken);
+            formData.append('user_id', userId);
+            const res = await fetch('/users/delete', {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                credentials: 'same-origin',
+            });
+            const text = await res.text();
+            const { type, message } = parseResponse(text);
+            if (type === 'success') {
+                await refreshStatus();
+            } else {
+                alert(message);
+            }
+        } catch (error) {
+            alert(error instanceof Error ? error.message : '删除失败');
+        }
+    });
+
     window.dashboardRefresh = refreshStatus;
-    loadDashboardData();
+    if (authState === 'authenticated') {
+        loadDashboardData();
+    }
 })();
 </script>
 </body>
