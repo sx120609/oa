@@ -75,6 +75,11 @@
         .input-with-helper input { flex: 1 1 auto; }
         .fill-now-btn { border: none; background: rgba(37, 99, 235, 0.12); color: var(--primary); border-radius: 0.6rem; padding: 0.4rem 0.8rem; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: background 0.15s ease, color 0.15s ease; }
         .fill-now-btn:hover { background: rgba(37, 99, 235, 0.18); color: #1d4ed8; }
+        .global-message { display: none; margin: 1rem 0; padding: 0.9rem 1rem; border-radius: 0.9rem; font-size: 0.95rem; font-weight: 500; border: 1px solid transparent; }
+        .global-message.show { display: block; }
+        .global-message[data-type="success"] { background: rgba(22, 163, 74, 0.14); border-color: rgba(22, 163, 74, 0.4); color: #166534; }
+        .global-message[data-type="error"] { background: rgba(220, 38, 38, 0.12); border-color: rgba(220, 38, 38, 0.4); color: #991b1b; }
+        .global-message[data-type="info"] { background: rgba(59, 130, 246, 0.12); border-color: rgba(37, 99, 235, 0.3); color: #1d4ed8; }
         .form-result { border-radius: 0.75rem; padding: 0.5rem 0.75rem; font-size: 0.9rem; display: none; }
         .form-result.show { display: block; }
         .form-result.success { background: rgba(16, 185, 129, 0.15); color: var(--success); }
@@ -109,6 +114,7 @@
         </div>
     </aside>
     <div class="content" data-login-state="<?= !empty($session['uid']) ? 'authenticated' : 'guest' ?>">
+        <div class="global-message" data-global-message></div>
         <header class="topbar">
             <div class="breadcrumb">
                 <span>资产运营平台</span>
@@ -544,6 +550,8 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
     const breadcrumb = document.getElementById('breadcrumb-label');
     let authState = document.querySelector('.content')?.dataset.loginState || 'guest';
     let dashboardData = {};
+    const globalMessage = document.querySelector('[data-global-message]');
+    let globalMessageTimer = null;
 
     const syncAuthVisibility = () => {
         document.querySelectorAll('[data-auth-visible]').forEach((block) => {
@@ -556,11 +564,76 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
 
     let csrfToken = document.querySelector('form[data-ajax="true"] input[name="_token"]')?.value || '';
 
-    const parseResponse = (text) => {
+    const showGlobalMessage = (type, message, duration = 6000) => {
+        if (!globalMessage || !message) {
+            return;
+        }
+        if (globalMessageTimer) {
+            clearTimeout(globalMessageTimer);
+            globalMessageTimer = null;
+        }
+        globalMessage.dataset.type = type;
+        globalMessage.textContent = message;
+        globalMessage.classList.add('show');
+        if (duration > 0) {
+            globalMessageTimer = window.setTimeout(() => {
+                globalMessage.classList.remove('show');
+                globalMessageTimer = null;
+            }, duration);
+        }
+    };
+
+    const hideGlobalMessage = () => {
+        if (!globalMessage) return;
+        if (globalMessageTimer) {
+            clearTimeout(globalMessageTimer);
+            globalMessageTimer = null;
+        }
+        globalMessage.classList.remove('show');
+    };
+
+    const structuredMessage = (raw) => {
+        try {
+            const data = JSON.parse(raw);
+            if (data && typeof data.message === 'string' && data.message.trim() !== '') {
+                return data.message.trim();
+            }
+        } catch (error) {
+            return null;
+        }
+        return null;
+    };
+
+    const parseResponse = (text, status = 200, statusText = '') => {
         const trimmed = text.trim();
-        if (!trimmed) { return { type: 'error', message: '服务器未返回任何信息。' }; }
-        if (trimmed.toUpperCase().startsWith('OK')) { return { type: 'success', message: trimmed }; }
-        if (trimmed.toUpperCase().startsWith('ERROR')) { return { type: 'error', message: trimmed.replace(/^ERROR:\s*/i, '') }; }
+        const fallback = status >= 400
+            ? `请求失败（HTTP ${status}${statusText ? ` ${statusText}` : ''}）`
+            : '服务器未返回任何信息。';
+
+        if (!trimmed) {
+            return { type: 'error', message: fallback };
+        }
+
+        if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+            const structured = structuredMessage(trimmed);
+            if (structured) {
+                return { type: status >= 400 ? 'error' : 'info', message: structured };
+            }
+        }
+
+        if (/^OK\b/i.test(trimmed)) {
+            const rest = trimmed.replace(/^OK:?/i, '').trim();
+            return { type: 'success', message: rest !== '' ? rest : '操作成功' };
+        }
+        if (/^ERROR\b/i.test(trimmed)) {
+            const rest = trimmed.replace(/^ERROR:\s*/i, '').trim();
+            return { type: 'error', message: rest !== '' ? rest : '操作失败' };
+        }
+
+        if (status >= 400) {
+            return { type: 'error', message: trimmed };
+        }
+
         return { type: 'info', message: trimmed };
     };
 
@@ -951,12 +1024,21 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
                 headers: { 'X-Requested-With': 'XMLHttpRequest' },
                 credentials: 'same-origin',
             });
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            if (!res.ok) {
+                const text = await res.text();
+                const { message } = parseResponse(text, res.status, res.statusText);
+                showGlobalMessage('error', message || '数据加载失败');
+                return;
+            }
             const payload = await res.json();
-            if (!payload.success) throw new Error(payload.message ?? '数据加载失败');
+            if (!payload.success) {
+                showGlobalMessage('error', payload.message ?? '数据加载失败');
+                return;
+            }
             applyDashboardData(payload.data ?? {});
         } catch (error) {
             console.error('加载数据失败', error);
+            showGlobalMessage('error', error instanceof Error ? error.message : '数据加载失败');
         }
     };
 
@@ -971,8 +1053,12 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
                 headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'text/html' },
                 credentials: 'same-origin',
             });
-            if (!res.ok) return;
             const html = await res.text();
+            if (!res.ok) {
+                const { message } = parseResponse(html, res.status, res.statusText);
+                showGlobalMessage('error', message || '页面刷新失败');
+                return;
+            }
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, 'text/html');
             const formsNew = doc.querySelectorAll('form[data-ajax="true"]');
@@ -1002,6 +1088,7 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
             syncAuthVisibility();
         } catch (error) {
             console.warn('刷新页面状态失败', error);
+            showGlobalMessage('error', error instanceof Error ? error.message : '页面刷新失败');
         } finally {
             if (authState === 'authenticated') {
                 await loadDashboardData();
@@ -1053,10 +1140,17 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
                     credentials: 'same-origin',
                 });
                 const text = await response.text();
-                const { type, message } = parseResponse(text);
+                const { type, message } = parseResponse(text, response.status, response.statusText);
                 if (resultBox) {
                     resultBox.className = `form-result show ${type}`;
                     resultBox.textContent = message;
+                }
+                if (type === 'error') {
+                    showGlobalMessage('error', message || '操作失败');
+                } else if (type === 'success') {
+                    showGlobalMessage('success', message || '操作成功');
+                } else if (type === 'info' && message) {
+                    showGlobalMessage('info', message);
                 }
                 if (type === 'success') {
                     await refreshStatus();
@@ -1069,6 +1163,7 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
                     resultBox.className = 'form-result show error';
                     resultBox.textContent = `请求失败：${error instanceof Error ? error.message : '未知错误'}`;
                 }
+                showGlobalMessage('error', error instanceof Error ? error.message : '请求失败');
             } finally {
                 if (submitBtn) {
                     submitBtn.disabled = false;
@@ -1109,14 +1204,15 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
                     credentials: 'same-origin',
                 });
                 const text = await res.text();
-                const { type, message } = parseResponse(text);
+                const { type, message } = parseResponse(text, res.status, res.statusText);
                 if (type === 'success') {
+                    showGlobalMessage('success', message || '删除成功');
                     await refreshStatus();
                 } else {
-                    alert(message);
+                    showGlobalMessage('error', message || '删除失败');
                 }
             } catch (error) {
-                alert(error instanceof Error ? error.message : '删除失败');
+                showGlobalMessage('error', error instanceof Error ? error.message : '删除失败');
             }
             return;
         }
