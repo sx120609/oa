@@ -71,6 +71,10 @@
         .form-card h4 { margin: 0; font-size: 1rem; }
         .form-card label { display: grid; gap: 0.35rem; font-size: 0.9rem; }
         .form-card input, .form-card textarea, .form-card select { border: 1px solid var(--border); border-radius: 0.7rem; padding: 0.55rem 0.7rem; font-size: 0.95rem; }
+        .input-with-helper { display: flex; align-items: center; gap: 0.6rem; }
+        .input-with-helper input { flex: 1 1 auto; }
+        .fill-now-btn { border: none; background: rgba(37, 99, 235, 0.12); color: var(--primary); border-radius: 0.6rem; padding: 0.4rem 0.8rem; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: background 0.15s ease, color 0.15s ease; }
+        .fill-now-btn:hover { background: rgba(37, 99, 235, 0.18); color: #1d4ed8; }
         .form-result { border-radius: 0.75rem; padding: 0.5rem 0.75rem; font-size: 0.9rem; display: none; }
         .form-result.show { display: block; }
         .form-result.success { background: rgba(16, 185, 129, 0.15); color: var(--success); }
@@ -217,8 +221,18 @@
                         <?= csrf_field() ?>
                         <label>项目名称<input type="text" name="name" required></label>
                         <label>项目地点<input type="text" name="location" required></label>
-                        <label>开始时间<input type="datetime-local" name="starts_at" required></label>
-                        <label>交付时间<input type="datetime-local" name="due_at" required></label>
+                        <label>开始时间
+                            <div class="input-with-helper">
+                                <input type="datetime-local" name="starts_at" required>
+                                <button type="button" class="fill-now-btn" data-fill-now>当前时间</button>
+                            </div>
+                        </label>
+                        <label>交付时间
+                            <div class="input-with-helper">
+                                <input type="datetime-local" name="due_at" required>
+                                <button type="button" class="fill-now-btn" data-fill-now>当前时间</button>
+                            </div>
+                        </label>
                         <label>报价金额<input type="number" step="0.01" name="quote_amount" value="0.00"></label>
                         <label>备注<textarea name="note"></textarea></label>
                         <button type="submit">提交项目</button>
@@ -240,8 +254,18 @@
                                 <option value="done">已完成</option>
                             </select>
                         </label>
-                        <label>开始时间<input type="datetime-local" name="starts_at" required></label>
-                        <label>交付时间<input type="datetime-local" name="due_at" required></label>
+                        <label>开始时间
+                            <div class="input-with-helper">
+                                <input type="datetime-local" name="starts_at" required>
+                                <button type="button" class="fill-now-btn" data-fill-now>当前时间</button>
+                            </div>
+                        </label>
+                        <label>交付时间
+                            <div class="input-with-helper">
+                                <input type="datetime-local" name="due_at" required>
+                                <button type="button" class="fill-now-btn" data-fill-now>当前时间</button>
+                            </div>
+                        </label>
                         <label>报价金额<input type="number" step="0.01" name="quote_amount" required></label>
                         <label>备注<textarea name="note"></textarea></label>
                         <button type="submit">保存修改</button>
@@ -308,8 +332,18 @@
                         <label>设备
                             <select name="device_id" data-select="devices" data-placeholder="请选择设备" required></select>
                         </label>
-                        <label>开始时间<input type="datetime-local" name="from" required></label>
-                        <label>结束时间<input type="datetime-local" name="to" required></label>
+                        <label>开始时间
+                            <div class="input-with-helper">
+                                <input type="datetime-local" name="from" required>
+                                <button type="button" class="fill-now-btn" data-fill-now>当前时间</button>
+                            </div>
+                        </label>
+                        <label>结束时间
+                            <div class="input-with-helper">
+                                <input type="datetime-local" name="to" required>
+                                <button type="button" class="fill-now-btn" data-fill-now>当前时间</button>
+                            </div>
+                        </label>
                         <button type="submit">提交预留</button>
                         <div class="form-result" data-result></div>
                     </form>
@@ -327,8 +361,18 @@
                         <label>设备
                             <select name="device_id" data-select="devices" data-placeholder="请选择设备" required></select>
                         </label>
-                        <label>开始时间<input type="datetime-local" name="from" required></label>
-                        <label>结束时间<input type="datetime-local" name="to" required></label>
+                        <label>开始时间
+                            <div class="input-with-helper">
+                                <input type="datetime-local" name="from" required>
+                                <button type="button" class="fill-now-btn" data-fill-now>当前时间</button>
+                            </div>
+                        </label>
+                        <label>结束时间
+                            <div class="input-with-helper">
+                                <input type="datetime-local" name="to" required>
+                                <button type="button" class="fill-now-btn" data-fill-now>当前时间</button>
+                            </div>
+                        </label>
                         <button type="submit">保存修改</button>
                         <div class="form-result" data-result></div>
                     </form>
@@ -353,8 +397,18 @@
                         <label>项目（可选）
                             <select name="project_id" data-select="projects" data-placeholder="关联项目" data-allow-empty="true"></select>
                         </label>
-                        <label>借出时间<input type="datetime-local" name="now" required></label>
-                        <label>归还期限<input type="datetime-local" name="due" required></label>
+                        <label>借出时间
+                            <div class="input-with-helper">
+                                <input type="datetime-local" name="now" required>
+                                <button type="button" class="fill-now-btn" data-fill-now>当前时间</button>
+                            </div>
+                        </label>
+                        <label>归还期限
+                            <div class="input-with-helper">
+                                <input type="datetime-local" name="due" required>
+                                <button type="button" class="fill-now-btn" data-fill-now>当前时间</button>
+                            </div>
+                        </label>
                         <label>借出照片（可选）<input type="url" name="photo"></label>
                         <label>备注<textarea name="note"></textarea></label>
                         <button type="submit">提交借出</button>
@@ -368,7 +422,12 @@
                         <label>设备
                             <select name="device_id" data-select="devices" data-placeholder="请选择设备" required></select>
                         </label>
-                        <label>归还时间<input type="datetime-local" name="now" required></label>
+                        <label>归还时间
+                            <div class="input-with-helper">
+                                <input type="datetime-local" name="now" required>
+                                <button type="button" class="fill-now-btn" data-fill-now>当前时间</button>
+                            </div>
+                        </label>
                         <label>归还照片（可选）<input type="url" name="photo"></label>
                         <label>备注<textarea name="note"></textarea></label>
                         <button type="submit">提交归还</button>
@@ -388,7 +447,12 @@
                         <label>关联项目（可选）
                             <select name="project_id" data-select="projects" data-placeholder="关联项目" data-allow-empty="true"></select>
                         </label>
-                        <label>归还期限<input type="datetime-local" name="due" required></label>
+                        <label>归还期限
+                            <div class="input-with-helper">
+                                <input type="datetime-local" name="due" required>
+                                <button type="button" class="fill-now-btn" data-fill-now>当前时间</button>
+                            </div>
+                        </label>
                         <label>备注<textarea name="note"></textarea></label>
                         <button type="submit">保存修改</button>
                         <div class="form-result" data-result></div>
@@ -414,7 +478,12 @@
                         <label>新项目（可选）
                             <select name="project_id" data-select="projects" data-placeholder="关联项目" data-allow-empty="true"></select>
                         </label>
-                        <label>新的归还时间（可选）<input type="datetime-local" name="due_at"></label>
+                        <label>新的归还时间（可选）
+                            <div class="input-with-helper">
+                                <input type="datetime-local" name="due_at">
+                                <button type="button" class="fill-now-btn" data-fill-now>当前时间</button>
+                            </div>
+                        </label>
                         <label>备注（可选）<textarea name="note"></textarea></label>
                         <button type="submit">提交转交请求</button>
                         <div class="form-result" data-result></div>
@@ -430,7 +499,12 @@
                         <label>目标项目（可选）
                             <select name="project_id" data-select="projects" data-placeholder="关联项目" data-allow-empty="true"></select>
                         </label>
-                        <label>新的归还时间（可选）<input type="datetime-local" name="due_at"></label>
+                        <label>新的归还时间（可选）
+                            <div class="input-with-helper">
+                                <input type="datetime-local" name="due_at">
+                                <button type="button" class="fill-now-btn" data-fill-now>当前时间</button>
+                            </div>
+                        </label>
                         <label>备注（可选）<textarea name="note"></textarea></label>
                         <button type="submit">确认接收</button>
                         <div class="form-result" data-result></div>
@@ -640,6 +714,14 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
         const normalized = String(value).replace(/\.\d+/, '').replace('Z', '');
         const replaced = normalized.includes('T') ? normalized : normalized.replace(' ', 'T');
         return replaced.slice(0, 16);
+    };
+
+    const currentLocalDateTime = () => {
+        const now = new Date();
+        now.setSeconds(0, 0);
+        const offsetMs = now.getTimezoneOffset() * 60000;
+        const local = new Date(now.getTime() - offsetMs);
+        return local.toISOString().slice(0, 16);
     };
 
     const setSelectValue = (select, value) => {
@@ -996,6 +1078,19 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
     });
 
     document.addEventListener('click', async (event) => {
+        const fillBtn = event.target.closest('[data-fill-now]');
+        if (fillBtn) {
+            event.preventDefault();
+            const container = fillBtn.closest('.input-with-helper') || fillBtn.closest('label');
+            const input = container?.querySelector('input[type="datetime-local"]');
+            if (input) {
+                input.value = currentLocalDateTime();
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+                input.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            return;
+        }
+
         const deleteBtn = event.target.closest('[data-delete-user]');
         if (deleteBtn) {
             const userId = deleteBtn.getAttribute('data-delete-user');
