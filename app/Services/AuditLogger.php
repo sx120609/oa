@@ -39,7 +39,9 @@ final class AuditLogger
                 ':detail' => $json,
             ]);
         } catch (PDOException $e) {
-            throw new HttpException('写入审计日志失败', 500, $e);
+            error_log(sprintf('Audit log insert failed: %s', $e->getMessage()));
+            // 不影响主流程，记录错误即可
+            return;
         }
     }
 }
