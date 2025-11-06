@@ -276,7 +276,7 @@
             <section class="tab-content" data-tab-content="devices">
                 <div class="section-title"><h2>设备列表</h2><span class="badge" data-count-badge="devices">共 0 条</span></div>
                 <div class="data-table-wrapper">
-                    <table class="data-table"><thead><tr><th>ID</th><th>编号</th><th>型号</th><th>状态</th><th>创建时间</th><th>操作</th></tr></thead><tbody data-table-body="devices"></tbody></table>
+                    <table class="data-table"><thead><tr><th>ID</th><th>编号</th><th>型号</th><th>状态</th><th>当前持有人</th><th>创建时间</th><th>操作</th></tr></thead><tbody data-table-body="devices"></tbody></table>
                 </div>
                 <p class="empty-placeholder" data-empty="devices">暂无设备记录。</p>
                 <div class="form-card">
@@ -646,6 +646,7 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
                     <td>${row.code ?? '-'}</td>
                     <td>${row.model ?? '-'}</td>
                     <td>${statusChip(row.status ?? null, 'device')}</td>
+                    <td>${row.holder_name ? `${row.holder_name}${row.holder_email ? ` (${row.holder_email})` : ''}` : '—'}</td>
                     <td>${formatDate(row.created_at ?? null)}</td>
                     <td><button type="button" class="action-btn edit" data-edit-trigger="devices" data-record-id="${row.id ?? ''}">编辑</button></td>
                 </tr>
