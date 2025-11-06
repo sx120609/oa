@@ -17,6 +17,7 @@ MYSQL_PORT=${MYSQL_PORT:-3306}
 MYSQL_USER=${MYSQL_USER:-root}
 MYSQL_PASSWORD=${MYSQL_PASSWORD:-}
 MYSQL_DB=${MYSQL_DB:-app_db}
+TEST_PASSWORD=${TEST_PASSWORD:-secretpass}
 
 mysql_exec() {
   MYSQL_PWD="$MYSQL_PASSWORD" mysql --protocol=TCP -h "$MYSQL_HOST" -P "$MYSQL_PORT" -u "$MYSQL_USER" "$@"
@@ -60,18 +61,15 @@ fi
 
 # 1. Seed user (manual DB insert)
 info "Seeding users table"
-cat > "$TMP_SQL" <<'SQL'
-INSERT INTO users (email, name, password_hash, role, created_at)
-VALUES ('owner@example.com', 'Owner', '$2y$10$K8zVvN6wX6Zl6VdI6yYB1.MX4T5xFZbCW9HEIblzEl3bLTsayDb/m', 'owner', NOW())
-ON DUPLICATE KEY UPDATE password_hash = VALUES(password_hash);
-SQL
+PASSWORD_HASH=$(TEST_PASSWORD_VALUE="$TEST_PASSWORD" php -r 'echo password_hash(getenv("TEST_PASSWORD_VALUE"), PASSWORD_BCRYPT);')
+printf "INSERT INTO users (email, name, password_hash, role, created_at)\nVALUES ('owner@example.com', 'Owner', '%s', 'owner', NOW())\nON DUPLICATE KEY UPDATE password_hash = VALUES(password_hash);\n" "$PASSWORD_HASH" > "$TMP_SQL"
 mysql_db < "$TMP_SQL"
 
 # Prime session & token
 TOKEN=$(csrf_token)
 echo "CSRF token: $TOKEN"
 
-login_payload="_token=$TOKEN&email=owner@example.com&password=secretpass"
+login_payload="_token=$TOKEN&email=owner@example.com&password=$TEST_PASSWORD"
 
 # 2. Login success/failure
 info "Login success"
@@ -88,7 +86,7 @@ curl -sS -b "$COOKIE_JAR" \
 # Refresh token after successful login
 TOKEN=$(csrf_token)
 echo "Session CSRF token: $TOKEN"
-login_payload="_token=$TOKEN&email=owner@example.com&password=secretpass"
+login_payload="_token=$TOKEN&email=owner@example.com&password=$TEST_PASSWORD"
 
 # 3. Create project success
 info "Create project success"
