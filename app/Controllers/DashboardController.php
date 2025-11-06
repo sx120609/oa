@@ -54,12 +54,17 @@ final class DashboardController extends Controller
                  LIMIT 10'
             )->fetchAll() ?: [];
 
+            $users = $pdo->query(
+                'SELECT id, name, email, role, created_at FROM users ORDER BY created_at DESC LIMIT 20'
+            )->fetchAll() ?: [];
+
             $payload = [
                 'projects' => $projects,
                 'devices' => $devices,
                 'reservations' => $reservations,
                 'checkouts' => $checkouts,
                 'notifications' => $notifications,
+                'users' => $users,
             ];
 
             header('Content-Type: application/json');
