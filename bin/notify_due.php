@@ -26,8 +26,10 @@ $query = $pdo->query(
            OR TIMESTAMPDIFF(MINUTE, NOW(), due_at) BETWEEN 0 AND 120
        )'
 );
-
-$rows = $query?->fetchAll() ?? [];
+$rows = [];
+if ($query !== false) {
+    $rows = $query->fetchAll();
+}
 $inserted = 0;
 
 $checkStmt = $pdo->prepare(

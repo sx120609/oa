@@ -35,6 +35,22 @@ future_iso() {
   fi
 }
 
+fetch_token() {
+  local html
+  html=$(curl -sS -b "$COOKIE_JAR" -c "$COOKIE_JAR" "$BASE_URL/")
+  echo "$html" | sed -n 's/.*name="_token"[[:space:]]*value="\([^"]*\)".*/\1/p' | head -n1
+}
+
+csrf_token() {
+  local token
+  token=$(fetch_token)
+  if [ -z "$token" ]; then
+    echo "未能获取 CSRF Token" >&2
+    exit 1
+  fi
+  echo "$token"
+}
+
 info "Preparing database schema"
 mysql_exec -e "CREATE DATABASE IF NOT EXISTS \`${MYSQL_DB}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
 USERS_TABLE=$(mysql_exec -N -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='${MYSQL_DB}' AND table_name='users'")
@@ -51,9 +67,8 @@ ON DUPLICATE KEY UPDATE password_hash = VALUES(password_hash);
 SQL
 mysql_db < "$TMP_SQL"
 
-# Prime session
-curl -sS -c "$COOKIE_JAR" "$BASE_URL/" >/dev/null
-TOKEN=$(awk '/^X-CSRF-Token:/ {print $2}' <(curl -si -b "$COOKIE_JAR" -c "$COOKIE_JAR" "$BASE_URL/") | tr -d '\r')
+# Prime session & token
+TOKEN=$(csrf_token)
 echo "CSRF token: $TOKEN"
 
 # 2. Login success/failure
@@ -69,7 +84,7 @@ curl -sS -b "$COOKIE_JAR" \
   -d "_token=$TOKEN&email=owner@example.com&password=wrong" || true
 
 # Refresh token after successful login
-TOKEN=$(awk '/_csrf_token/ {print $7}' "$COOKIE_JAR" | tail -n1)
+TOKEN=$(csrf_token)
 echo "Session CSRF token: $TOKEN"
 
 # 3. Create project success
