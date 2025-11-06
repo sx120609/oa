@@ -290,7 +290,7 @@
             <button class="nav-link" data-tab="notifications">通知中心</button>
         </div>
     </aside>
-    <div class="content">
+    <div class="content" data-login-state="<?= !empty($session['uid']) ? 'authenticated' : 'guest' ?>">
         <header class="topbar">
             <div class="breadcrumb">
                 <span>资产运营平台</span>
@@ -299,7 +299,7 @@
             </div>
             <div class="top-actions">
                 <button type="button" onclick="window.dashboardRefresh && window.dashboardRefresh()">刷新数据</button>
-                <div class="login-card">
+                <div class="login-card" data-auth-visible="guest">
                     <form method="post" action="/login" data-ajax="true">
                         <?= csrf_field() ?>
                         <input type="email" name="email" placeholder="邮箱" required>
@@ -308,9 +308,14 @@
                         <div class="form-result" data-result></div>
                     </form>
                 </div>
+                <div class="login-card" data-auth-visible="authenticated" style="display:none;">
+                    <div>
+                        <strong>当前账号：</strong><?= escape($session['email'] ?? '') ?>
+                    </div>
+                </div>
             </div>
         </header>
-        <div class="tabs-container">
+        <div class="tabs-container" data-auth-visible="authenticated" style="display:none;">
             <div class="tabs-header">
                 <button class="tab-btn active" data-tab="overview">总览</button>
                 <button class="tab-btn" data-tab="projects">项目</button>
@@ -430,12 +435,21 @@
                 <p class="empty-placeholder" data-empty="notifications">暂无通知记录。</p>
             </section>
         </div>
+        <div class="glass-card" data-auth-visible="guest" style="display:none; text-align:center; padding:3rem;">
+            <h2>请先登录</h2>
+            <p style="color: var(--muted); margin: 0;">登陆后可查看项目、设备及操作记录。</p>
+        </div>
         <footer>© <?= date('Y') ?> 资产运营平台 · 管理后台</footer>
     </div>
 </div>
 <script>
 (() => {
     const forms = document.querySelectorAll('form[data-ajax="true"]');
+    const authState = document.querySelector('.content')?.dataset.loginState;
+    document.querySelectorAll('[data-auth-visible]').forEach((block) => {
+        const state = block.getAttribute('data-auth-visible');
+        block.style.display = state === authState ? '' : 'none';
+    });
     const tabs = document.querySelectorAll('.nav-link, .tab-btn');
     const tabContents = document.querySelectorAll('.tab-content');
     const breadcrumb = document.getElementById('breadcrumb-label');
