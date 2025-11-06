@@ -1,5 +1,30 @@
 <?php
 /** @var array $session */
+/** @var array $data */
+$formatDatetime = static function (?string $value): string {
+    if (empty($value)) {
+        return '-';
+    }
+    $timestamp = strtotime($value);
+    if ($timestamp === false) {
+        return escape($value);
+    }
+    return date('Y-m-d H:i', $timestamp);
+};
+
+$projectStatusMap = [
+    'ongoing' => '进行中',
+    'done' => '已完成',
+];
+
+$deviceStatusMap = [
+    'in_stock' => '在库',
+    'reserved' => '已预留',
+    'checked_out' => '借出中',
+    'transfer_pending' => '待转交',
+    'lost' => '遗失',
+    'repair' => '维修中',
+];
 ?>
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -9,7 +34,7 @@
     <title>资产管理控制台</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; padding: 2rem; background: #f3f4f6; color: #111827; }
-        main { max-width: 1080px; margin: 0 auto; display: grid; gap: 1.5rem; }
+        main { max-width: 1160px; margin: 0 auto; display: grid; gap: 1.5rem; }
         section { background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(15, 23, 42, 0.12); padding: 1.75rem; }
         h1 { margin: 0 0 1rem 0; font-size: 2rem; }
         h2 { margin: 0 0 1rem 0; font-size: 1.25rem; }
@@ -27,13 +52,32 @@
         .form-result.error { background: rgba(239, 68, 68, 0.12); color: #991b1b; border: 1px solid rgba(239, 68, 68, 0.2); }
         .form-result.info { background: rgba(148, 163, 184, 0.14); color: #334155; border: 1px solid rgba(148, 163, 184, 0.3); }
         .form-hint { font-size: 0.85rem; color: #64748b; line-height: 1.6; }
+        .dashboard-head { display: flex; flex-direction: column; gap: 1rem; }
+        .dashboard-actions { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+        .refresh-btn { background: #0ea5e9; padding: 0.6rem 1.1rem; border-radius: 8px; font-weight: 600; border: none; color: #fff; cursor: pointer; transition: background 0.2s; }
+        .refresh-btn:hover { background: #0284c7; }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+        .data-table th, .data-table td { padding: 0.55rem 0.75rem; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        .data-table tbody tr:nth-child(even) { background: #f8fafc; }
+        .data-table th { background: #f1f5f9; font-weight: 700; color: #334155; }
+        .badge { display: inline-flex; align-items: center; padding: 0.25rem 0.5rem; background: rgba(148, 163, 184, 0.16); color: #475569; border-radius: 6px; font-size: 0.75rem; font-weight: 600; }
+        .section-title { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-bottom: 1rem; }
+        .status-chip { display: inline-flex; align-items: center; padding: 0.2rem 0.55rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; background: rgba(59, 130, 246, 0.12); color: #1d4ed8; }
+        .status-chip.success { background: rgba(34, 197, 94, 0.15); color: #15803d; }
+        .status-chip.warning { background: rgba(250, 204, 21, 0.18); color: #b45309; }
+        .status-chip.danger { background: rgba(248, 113, 113, 0.2); color: #b91c1c; }
+        .empty-placeholder { font-size: 0.9rem; color: #64748b; padding: 0.5rem 0; }
     </style>
 </head>
 <body>
     <main>
-        <section>
+        <section class="dashboard-head">
             <h1>资产管理控制台</h1>
-            <p class="status">
+            <div class="dashboard-actions">
+                <button type="button" class="refresh-btn" onclick="window.dashboardRefresh && window.dashboardRefresh(true)">刷新数据</button>
+                <span class="form-hint">刷新后可同步最新项目、设备、预约与借用状态。</span>
+            </div>
+            <p class="status" data-current-status>
                 <strong>当前状态：</strong>
                 <?php if (!empty($session['uid'])): ?>
                     已登录，账号 <?= escape($session['email'] ?? ('UID ' . $session['uid'])) ?>（角色 <?= escape($session['role'] ?? '未知') ?>）
@@ -41,6 +85,204 @@
                     未登录
                 <?php endif; ?>
             </p>
+        </section>
+
+        <section data-dataset="projects">
+            <div class="section-title">
+                <h2>项目概览</h2>
+                <span class="badge">近期记录：<?= escape((string) count($data['projects'])) ?> 条</span>
+            </div>
+            <?php if (!empty($data['projects'])): ?>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>项目名称</th>
+                            <th>地点</th>
+                            <th>状态</th>
+                            <th>开始时间</th>
+                            <th>交付时间</th>
+                            <th>创建时间</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($data['projects'] as $project): ?>
+                            <tr>
+                                <td><?= escape((string) $project['id']) ?></td>
+                                <td><?= escape($project['name'] ?? '-') ?></td>
+                                <td><?= escape($project['location'] ?? '-') ?></td>
+                                <td>
+                                    <?php
+                                        $status = $project['status'] ?? '';
+                                        $label = $projectStatusMap[$status] ?? ($status ?: '-');
+                                    ?>
+                                    <span class="status-chip"><?= escape($label) ?></span>
+                                </td>
+                                <td><?= escape($formatDatetime($project['starts_at'] ?? null)) ?></td>
+                                <td><?= escape($formatDatetime($project['due_at'] ?? null)) ?></td>
+                                <td><?= escape($formatDatetime($project['created_at'] ?? null)) ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php else: ?>
+                <p class="empty-placeholder">暂无项目记录。</p>
+            <?php endif; ?>
+        </section>
+
+        <section data-dataset="devices">
+            <div class="section-title">
+                <h2>设备概览</h2>
+                <span class="badge">近期记录：<?= escape((string) count($data['devices'])) ?> 条</span>
+            </div>
+            <?php if (!empty($data['devices'])): ?>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>编号</th>
+                            <th>型号</th>
+                            <th>状态</th>
+                            <th>创建时间</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($data['devices'] as $device): ?>
+                            <?php
+                                $status = $device['status'] ?? '';
+                                $statusLabel = $deviceStatusMap[$status] ?? ($status ?: '-');
+                                $chipClass = match ($status) {
+                                    'in_stock' => 'success',
+                                    'reserved' => 'warning',
+                                    'checked_out' => 'danger',
+                                    default => '',
+                                };
+                            ?>
+                            <tr>
+                                <td><?= escape((string) $device['id']) ?></td>
+                                <td><?= escape($device['code'] ?? '-') ?></td>
+                                <td><?= escape($device['model'] ?? '-') ?></td>
+                                <td><span class="status-chip <?= escape($chipClass) ?>"><?= escape($statusLabel) ?></span></td>
+                                <td><?= escape($formatDatetime($device['created_at'] ?? null)) ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php else: ?>
+                <p class="empty-placeholder">暂无设备记录。</p>
+            <?php endif; ?>
+        </section>
+
+        <section data-dataset="reservations">
+            <div class="section-title">
+                <h2>预留记录</h2>
+                <span class="badge">近期记录：<?= escape((string) count($data['reservations'])) ?> 条</span>
+            </div>
+            <?php if (!empty($data['reservations'])): ?>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>项目</th>
+                            <th>设备</th>
+                            <th>预留开始</th>
+                            <th>预留结束</th>
+                            <th>创建时间</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($data['reservations'] as $reservation): ?>
+                            <tr>
+                                <td><?= escape((string) $reservation['id']) ?></td>
+                                <td><?= escape($reservation['project_name'] ?? ('#' . ($reservation['project_id'] ?? '-'))) ?></td>
+                                <td><?= escape($reservation['device_code'] ?? ('#' . ($reservation['device_id'] ?? '-'))) ?></td>
+                                <td><?= escape($formatDatetime($reservation['reserved_from'] ?? null)) ?></td>
+                                <td><?= escape($formatDatetime($reservation['reserved_to'] ?? null)) ?></td>
+                                <td><?= escape($formatDatetime($reservation['created_at'] ?? null)) ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php else: ?>
+                <p class="empty-placeholder">暂无预留记录。</p>
+            <?php endif; ?>
+        </section>
+
+        <section data-dataset="checkouts">
+            <div class="section-title">
+                <h2>借用记录</h2>
+                <span class="badge">近期记录：<?= escape((string) count($data['checkouts'])) ?> 条</span>
+            </div>
+            <?php if (!empty($data['checkouts'])): ?>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>项目</th>
+                            <th>设备</th>
+                            <th>借出时间</th>
+                            <th>到期时间</th>
+                            <th>归还时间</th>
+                            <th>状态</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($data['checkouts'] as $checkout): ?>
+                            <?php
+                                $returned = !empty($checkout['return_at']);
+                                $chipClass = $returned ? 'success' : 'warning';
+                                $chipLabel = $returned ? '已归还' : '借出中';
+                            ?>
+                            <tr>
+                                <td><?= escape((string) $checkout['id']) ?></td>
+                                <td><?= escape($checkout['project_name'] ?? ('#' . ($checkout['project_id'] ?? '-'))) ?></td>
+                                <td><?= escape($checkout['device_code'] ?? ('#' . ($checkout['device_id'] ?? '-'))) ?></td>
+                                <td><?= escape($formatDatetime($checkout['checked_out_at'] ?? null)) ?></td>
+                                <td><?= escape($formatDatetime($checkout['due_at'] ?? null)) ?></td>
+                                <td><?= escape($formatDatetime($checkout['return_at'] ?? null)) ?></td>
+                                <td><span class="status-chip <?= escape($chipClass) ?>"><?= escape($chipLabel) ?></span></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php else: ?>
+                <p class="empty-placeholder">暂无借用记录。</p>
+            <?php endif; ?>
+        </section>
+
+        <section data-dataset="notifications">
+            <div class="section-title">
+                <h2>通知记录</h2>
+                <span class="badge">近期记录：<?= escape((string) count($data['notifications'])) ?> 条</span>
+            </div>
+            <?php if (!empty($data['notifications'])): ?>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>用户</th>
+                            <th>标题</th>
+                            <th>内容</th>
+                            <th>发送时间</th>
+                            <th>已送达</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($data['notifications'] as $notification): ?>
+                            <tr>
+                                <td><?= escape((string) $notification['id']) ?></td>
+                                <td><?= escape((string) ($notification['user_id'] ?? '-')) ?></td>
+                                <td><?= escape($notification['title'] ?? '-') ?></td>
+                                <td><?= escape($notification['body'] ?? '-') ?></td>
+                                <td><?= escape($formatDatetime($notification['created_at'] ?? null)) ?></td>
+                                <td><?= escape($notification['delivered_at'] ? $formatDatetime($notification['delivered_at']) : '未送达') ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php else: ?>
+                <p class="empty-placeholder">暂无通知记录。</p>
+            <?php endif; ?>
         </section>
 
         <section data-module="login">
@@ -219,7 +461,7 @@
                 return { type: 'info', message: trimmed };
             };
 
-            const refreshStatus = async () => {
+            const refreshStatus = async (syncData = false) => {
                 try {
                     const res = await fetch(window.location.href, {
                         method: 'GET',
@@ -232,7 +474,6 @@
                     const html = await res.text();
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(html, 'text/html');
-                    const tokenInputs = doc.querySelectorAll('input[name="_token"]');
                     const formsNew = doc.querySelectorAll('form');
                     formsNew.forEach((newForm, index) => {
                         const currentForm = forms[index];
@@ -245,15 +486,30 @@
                             currentToken.value = newToken.value;
                         }
                     });
-                    const statusNew = doc.querySelector('[data-module="login"] .status');
-                    const statusCurrent = document.querySelector('[data-module="login"] .status');
+                    const statusNew = doc.querySelector('[data-current-status]');
+                    const statusCurrent = document.querySelector('[data-current-status]');
                     if (statusNew && statusCurrent) {
                         statusCurrent.innerHTML = statusNew.innerHTML;
+                    }
+                    if (syncData) {
+                        doc.querySelectorAll('[data-dataset]').forEach((sectionNew) => {
+                            const key = sectionNew.getAttribute('data-dataset');
+                            if (!key) {
+                                return;
+                            }
+                            const selector = `[data-dataset="${key}"]`;
+                            const sectionCurrent = document.querySelector(selector);
+                            if (sectionCurrent) {
+                                sectionCurrent.innerHTML = sectionNew.innerHTML;
+                            }
+                        });
                     }
                 } catch (error) {
                     console.warn('刷新页面状态失败', error);
                 }
             };
+
+            const sectionsSelector = '[data-dataset]';
 
             forms.forEach((form) => {
                 const resultBox = form.querySelector('[data-result]');
@@ -286,7 +542,7 @@
                             resultBox.textContent = message;
                         }
                         if (type === 'success') {
-                            await refreshStatus();
+                            await refreshStatus(true);
                             if (form.dataset.resetOnSuccess !== 'false') {
                                 form.reset();
                             }
@@ -304,6 +560,8 @@
                     }
                 });
             });
+
+            window.dashboardRefresh = refreshStatus;
         })();
     </script>
 </body>
