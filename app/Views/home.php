@@ -1,6 +1,12 @@
 <?php
 /** @var array $session */
-/** @var array $data */
+/** @var array|null $data */
+$data = $data ?? [];
+$projects = $data['projects'] ?? [];
+$devices = $data['devices'] ?? [];
+$reservations = $data['reservations'] ?? [];
+$checkouts = $data['checkouts'] ?? [];
+$notifications = $data['notifications'] ?? [];
 $formatDatetime = static function (?string $value): string {
     if (empty($value)) {
         return '-';
@@ -90,9 +96,9 @@ $deviceStatusMap = [
         <section data-dataset="projects">
             <div class="section-title">
                 <h2>项目概览</h2>
-                <span class="badge">近期记录：<?= escape((string) count($data['projects'])) ?> 条</span>
+                <span class="badge">近期记录：<?= escape((string) count($projects)) ?> 条</span>
             </div>
-            <?php if (!empty($data['projects'])): ?>
+            <?php if (!empty($projects)): ?>
                 <table class="data-table">
                     <thead>
                         <tr>
@@ -106,7 +112,7 @@ $deviceStatusMap = [
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($data['projects'] as $project): ?>
+                        <?php foreach ($projects as $project): ?>
                             <tr>
                                 <td><?= escape((string) $project['id']) ?></td>
                                 <td><?= escape($project['name'] ?? '-') ?></td>
@@ -133,9 +139,9 @@ $deviceStatusMap = [
         <section data-dataset="devices">
             <div class="section-title">
                 <h2>设备概览</h2>
-                <span class="badge">近期记录：<?= escape((string) count($data['devices'])) ?> 条</span>
+                <span class="badge">近期记录：<?= escape((string) count($devices)) ?> 条</span>
             </div>
-            <?php if (!empty($data['devices'])): ?>
+            <?php if (!empty($devices)): ?>
                 <table class="data-table">
                     <thead>
                         <tr>
@@ -147,7 +153,7 @@ $deviceStatusMap = [
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($data['devices'] as $device): ?>
+                        <?php foreach ($devices as $device): ?>
                             <?php
                                 $status = $device['status'] ?? '';
                                 $statusLabel = $deviceStatusMap[$status] ?? ($status ?: '-');
@@ -176,9 +182,9 @@ $deviceStatusMap = [
         <section data-dataset="reservations">
             <div class="section-title">
                 <h2>预留记录</h2>
-                <span class="badge">近期记录：<?= escape((string) count($data['reservations'])) ?> 条</span>
+                <span class="badge">近期记录：<?= escape((string) count($reservations)) ?> 条</span>
             </div>
-            <?php if (!empty($data['reservations'])): ?>
+            <?php if (!empty($reservations)): ?>
                 <table class="data-table">
                     <thead>
                         <tr>
@@ -191,7 +197,7 @@ $deviceStatusMap = [
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($data['reservations'] as $reservation): ?>
+                        <?php foreach ($reservations as $reservation): ?>
                             <tr>
                                 <td><?= escape((string) $reservation['id']) ?></td>
                                 <td><?= escape($reservation['project_name'] ?? ('#' . ($reservation['project_id'] ?? '-'))) ?></td>
@@ -211,9 +217,9 @@ $deviceStatusMap = [
         <section data-dataset="checkouts">
             <div class="section-title">
                 <h2>借用记录</h2>
-                <span class="badge">近期记录：<?= escape((string) count($data['checkouts'])) ?> 条</span>
+                <span class="badge">近期记录：<?= escape((string) count($checkouts)) ?> 条</span>
             </div>
-            <?php if (!empty($data['checkouts'])): ?>
+            <?php if (!empty($checkouts)): ?>
                 <table class="data-table">
                     <thead>
                         <tr>
@@ -227,7 +233,7 @@ $deviceStatusMap = [
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($data['checkouts'] as $checkout): ?>
+                        <?php foreach ($checkouts as $checkout): ?>
                             <?php
                                 $returned = !empty($checkout['return_at']);
                                 $chipClass = $returned ? 'success' : 'warning';
@@ -253,9 +259,9 @@ $deviceStatusMap = [
         <section data-dataset="notifications">
             <div class="section-title">
                 <h2>通知记录</h2>
-                <span class="badge">近期记录：<?= escape((string) count($data['notifications'])) ?> 条</span>
+                <span class="badge">近期记录：<?= escape((string) count($notifications)) ?> 条</span>
             </div>
-            <?php if (!empty($data['notifications'])): ?>
+            <?php if (!empty($notifications)): ?>
                 <table class="data-table">
                     <thead>
                         <tr>
@@ -268,7 +274,7 @@ $deviceStatusMap = [
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($data['notifications'] as $notification): ?>
+                        <?php foreach ($notifications as $notification): ?>
                             <tr>
                                 <td><?= escape((string) $notification['id']) ?></td>
                                 <td><?= escape((string) ($notification['user_id'] ?? '-')) ?></td>
