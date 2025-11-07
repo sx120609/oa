@@ -91,6 +91,7 @@
         .form-result.success { background: rgba(16, 185, 129, 0.15); color: var(--success); }
         .form-result.error { background: rgba(248, 113, 113, 0.15); color: var(--danger); }
         .action-btn { border: none; border-radius: 0.6rem; padding: 0.35rem 0.65rem; font-size: 0.85rem; cursor: pointer; transition: opacity 0.15s ease; }
+        .action-btn.primary { background: rgba(37, 99, 235, 0.18); color: var(--primary); }
         .action-btn.edit { background: rgba(37, 99, 235, 0.12); color: var(--primary); }
         .action-btn.delete { background: rgba(239, 68, 68, 0.12); color: var(--danger); }
         .action-btn.delete:hover { opacity: 0.75; }
@@ -735,7 +736,8 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
                         <td>${formatDate(row.requested_at ?? null)}</td>
                         <td>
                             ${row.status === 'pending'
-                                ? `<button type="button" class="action-btn delete" data-delete-record="transfers" data-record-id="${row.id ?? ''}">取消</button>`
+                                ? `<button type="button" class="action-btn primary" data-confirm-transfer="${row.id ?? ''}">确认</button>
+                                   <button type="button" class="action-btn delete" data-delete-record="transfers" data-record-id="${row.id ?? ''}">取消</button>`
                                 : '—'}
                         </td>
                     </tr>
@@ -1412,6 +1414,36 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
 
             syncEditForm(key);
             openEditPanel(key);
+        }
+
+        const confirmBtn = event.target.closest('[data-confirm-transfer]');
+        if (confirmBtn) {
+            event.preventDefault();
+            const transferId = confirmBtn.getAttribute('data-confirm-transfer');
+            if (!transferId) {
+                showGlobalMessage('error', '缺少转交编号');
+                return;
+            }
+            try {
+                const formData = new FormData();
+                formData.append('_token', csrfToken);
+                formData.append('transfer_id', transferId);
+                const res = await fetch('/transfers/confirm', {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    credentials: 'same-origin',
+                });
+                const text = await res.text();
+                const { type, message } = parseResponse(text, res.status, res.statusText);
+                showGlobalMessage(type === 'success' ? 'success' : 'error', message || (type === 'success' ? '操作成功' : '操作失败'));
+                if (type === 'success') {
+                    await refreshStatus();
+                }
+            } catch (error) {
+                showGlobalMessage('error', error instanceof Error ? error.message : '确认转交失败');
+            }
+            return;
         }
     });
 
