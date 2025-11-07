@@ -217,6 +217,23 @@ SQL;
                 throw new HttpException('设备当前不可借出', 409);
             }
 
+            $reservationOverlap = $pdo->prepare(
+                'SELECT 1 FROM reservations
+                 WHERE device_id = :device_id
+                   AND reserved_from < :checkout_due
+                   AND reserved_to > :checkout_start
+                 LIMIT 1'
+            );
+            $reservationOverlap->execute([
+                ':device_id' => $deviceId,
+                ':checkout_start' => $checkedOutAtValue,
+                ':checkout_due' => $dueAtValue,
+            ]);
+            if ($reservationOverlap->fetchColumn()) {
+                $pdo->rollBack();
+                throw new HttpException('当前时间段设备已被预留', 409);
+            }
+
             $insert = $pdo->prepare(
                 'INSERT INTO checkouts (project_id, device_id, user_id, checked_out_at, due_at, checkout_photo, note, created_at)
                  VALUES (:project_id, :device_id, :user_id, :checked_out_at, :due_at, :photo, :note, NOW())'
