@@ -462,6 +462,13 @@
                                 <button type="button" class="fill-now-btn" data-fill-now>当前时间</button>
                             </div>
                         </label>
+                        <label>实际归还时间（可选）
+                            <div class="input-with-helper">
+                                <input type="datetime-local" name="return_at">
+                                <button type="button" class="fill-now-btn" data-fill-now>当前时间</button>
+                            </div>
+                        </label>
+                        <label>归还照片（可选）<input type="url" name="photo"></label>
                         <label>备注<textarea name="note"></textarea></label>
                         <button type="submit">保存修改</button>
                         <div class="form-result" data-result></div>

@@ -142,6 +142,10 @@ SQL;
                 ':device_id' => $deviceId,
             ]);
 
+            if ($returnAt) {
+                DeviceStatusService::refresh($pdo, $deviceId);
+            }
+
             $pdo->commit();
 
             DeviceStatusService::refresh($pdo, $deviceId);
@@ -659,12 +663,15 @@ SQL;
         $projectId = $this->optionalPositiveInt('project_id');
         $userId = $this->optionalPositiveInt('user_id');
         $dueAtTs = $this->timestampFromPost('due', false);
+        $returnAtTs = $this->timestampFromPost('return_at', false);
 
         if ($dueAtTs === null) {
             throw new HttpException('请提供新的归还时间', 409);
         }
 
         $dueAt = date('Y-m-d H:i:s', $dueAtTs);
+        $returnAt = $returnAtTs ? date('Y-m-d H:i:s', $returnAtTs) : null;
+        $photo = $this->optionalString('photo');
         $note = $this->optionalString('note');
 
         $pdo = DB::connection();
@@ -693,18 +700,28 @@ SQL;
             }
 
             $stmt = $pdo->prepare(
-                'UPDATE checkouts SET project_id = :project_id, user_id = :user_id, due_at = :due_at, note = :note WHERE id = :id'
+                'UPDATE checkouts SET project_id = :project_id, user_id = :user_id, due_at = :due_at, note = :note, return_at = :return_at, return_photo = :photo WHERE id = :id'
             );
             $stmt->execute([
                 ':project_id' => $newProjectId,
                 ':user_id' => $newUserId,
                 ':due_at' => $dueAt,
                 ':note' => $note ?: $checkout['note'],
+                ':return_at' => $returnAt,
+                ':photo' => $returnAt ? ($photo ?: $checkout['return_photo']) : $checkout['return_photo'],
                 ':id' => $checkoutId,
             ]);
 
             if ($stmt->rowCount() === 0) {
                 throw new HttpException('借用记录无变化', 404);
+            }
+
+            if ($returnAt) {
+                $deviceUpdate = $pdo->prepare('UPDATE devices SET status = :status WHERE id = :device_id');
+                $deviceUpdate->execute([
+                    ':status' => 'in_stock',
+                    ':device_id' => $deviceId,
+                ]);
             }
 
             $pdo->commit();
@@ -713,6 +730,7 @@ SQL;
                 'project_id' => $newProjectId,
                 'user_id' => $newUserId,
                 'due_at' => $dueAt,
+                'return_at' => $returnAt,
             ]);
         } catch (HttpException $exception) {
             if ($pdo->inTransaction()) {
