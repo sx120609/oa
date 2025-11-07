@@ -522,6 +522,27 @@
     </div>
 </div>
 <div class="edit-overlay" data-edit-overlay></div>
+<div class="form-card edit-panel" data-return-panel style="display:none;">
+    <header>
+        <h4>归还设备</h4>
+        <button type="button" class="edit-close" data-edit-close>&times;</button>
+    </header>
+    <form method="post" action="/returns/create" data-ajax="true" data-reset-on-success="false" data-return-form>
+        <?= csrf_field() ?>
+        <input type="hidden" name="device_id">
+        <p style="margin:0; font-weight:600;" data-return-info></p>
+        <label>归还时间
+            <div class="input-with-helper">
+                <input type="datetime-local" name="now" required>
+                <button type="button" class="fill-now-btn" data-fill-now>当前时间</button>
+            </div>
+        </label>
+        <label>归还照片（可选）<input type="url" name="photo"></label>
+        <label>备注<textarea name="note"></textarea></label>
+        <button type="submit">提交归还</button>
+        <div class="form-result" data-result></div>
+    </form>
+</div>
 <?php
 $initialDashboard = $session['uid'] ? ($data ?? []) : [];
 $initialDashboardJson = json_encode($initialDashboard, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
@@ -796,6 +817,7 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
                         <td>${formatDate(row.return_at ?? null)}</td>
                         <td><span class="status-chip ${chip}">${label}</span></td>
                         <td>
+                            ${!row.return_at ? `<button type="button" class="action-btn primary" data-return-checkout="${row.id ?? ''}" data-return-device="${row.device_code ?? ('#' + (row.device_id ?? '-'))}">归还</button>` : ''}
                             <button type="button" class="action-btn edit" data-edit-trigger="checkouts" data-record-id="${row.id ?? ''}">编辑</button>
                             <button type="button" class="action-btn delete" data-delete-record="checkouts" data-record-id="${row.id ?? ''}">删除</button>
                         </td>
@@ -891,7 +913,11 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
 
     const editForms = {};
     const editPanels = {};
+    const returnPanel = document.querySelector('[data-return-panel]');
+    const returnForm = returnPanel?.querySelector('form[data-return-form]') || null;
+    const returnInfo = returnPanel?.querySelector('[data-return-info]') || null;
     let activeEditKey = null;
+    let returnPanelActive = false;
     const editConfigs = {
         users: {
             dataset: 'users',
@@ -950,6 +976,10 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
     const closeEditPanels = () => {
         activeEditKey = null;
         Object.values(editPanels).forEach((panel) => panel.classList.remove('show'));
+        if (returnPanel) {
+            returnPanel.classList.remove('show');
+            returnPanelActive = false;
+        }
         if (editOverlay) {
             editOverlay.classList.remove('show');
         }
@@ -966,6 +996,18 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
             editOverlay.classList.add('show');
         }
         panel.classList.add('show');
+    };
+
+    const openReturnPanel = () => {
+        if (!returnPanel) {
+            showGlobalMessage('error', '无法打开归还窗口');
+            return;
+        }
+        returnPanelActive = true;
+        if (editOverlay) {
+            editOverlay.classList.add('show');
+        }
+        returnPanel.classList.add('show');
     };
 
     const deleteConfigs = {
@@ -1266,7 +1308,7 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
                 }
                 if (type === 'success') {
                     await refreshStatus();
-                    if (form.dataset.editForm) {
+                    if (form.dataset.editForm || form === returnForm) {
                         closeEditPanels();
                     }
                     if (form.dataset.resetOnSuccess !== 'false') {
@@ -1412,6 +1454,34 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
             } catch (error) {
                 showGlobalMessage('error', error instanceof Error ? error.message : '确认转交失败');
             }
+            return;
+        }
+
+        const returnBtn = event.target.closest('[data-return-checkout]');
+        if (returnBtn) {
+            event.preventDefault();
+            if (!returnForm || !returnPanel) {
+                showGlobalMessage('error', '无法打开归还表单');
+                return;
+            }
+            const deviceLabel = returnBtn.getAttribute('data-return-device') || '—';
+            const recordId = returnBtn.getAttribute('data-return-checkout');
+            const dataset = dashboardData.checkouts || [];
+            const checkout = dataset.find((item) => String(item.id ?? '') === String(recordId ?? '')) || null;
+            const deviceId = checkout?.device_id ?? returnBtn.getAttribute('data-device-id') ?? '';
+            const deviceInput = returnForm.querySelector('input[name="device_id"]');
+            const dateInput = returnForm.querySelector('input[name="now"]');
+            if (deviceInput) {
+                deviceInput.value = String(deviceId);
+            }
+            if (returnInfo) {
+                const userLabel = checkout?.user_name ? ` · ${checkout.user_name}` : '';
+                returnInfo.textContent = `${deviceLabel}${userLabel}`;
+            }
+            if (dateInput) {
+                dateInput.value = currentLocalDateTime();
+            }
+            openReturnPanel();
             return;
         }
     });
