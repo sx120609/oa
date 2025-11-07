@@ -416,7 +416,7 @@
                             <select name="device_id" data-select="devices" data-placeholder="请选择设备" required></select>
                         </label>
                         <label>借出用户
-                            <select name="user_id" data-select="users" data-placeholder="请选择用户" required></select>
+                            <select name="user_id" data-select="users" data-placeholder="请选择借用人" data-allow-empty="true" required></select>
                         </label>
                         <label>项目（可选）
                             <select name="project_id" data-select="projects" data-placeholder="关联项目" data-allow-empty="true"></select>
