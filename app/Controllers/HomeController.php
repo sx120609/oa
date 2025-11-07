@@ -62,7 +62,7 @@ final class HomeController extends Controller
     private function fetchProjects(PDO $pdo): array
     {
         try {
-            $rows = $pdo->query('SELECT * FROM projects ORDER BY created_at DESC LIMIT 50')->fetchAll() ?: [];
+            $rows = $pdo->query('SELECT * FROM projects ORDER BY id ASC LIMIT 50')->fetchAll() ?: [];
         } catch (PDOException $exception) {
             error_log('Load projects failed: ' . $exception->getMessage());
             return [];
@@ -94,10 +94,10 @@ final class HomeController extends Controller
                     SELECT c.device_id, c.user_id
                     FROM checkouts c
                     WHERE c.return_at IS NULL
-                    ORDER BY c.checked_out_at DESC
+                    ORDER BY c.device_id, c.checked_out_at DESC
                  ) AS active ON active.device_id = d.id
                  LEFT JOIN users u ON u.id = active.user_id
-                 ORDER BY d.created_at DESC
+                 ORDER BY d.id ASC
                  LIMIT 50'
             );
             $rows = $stmt ? $stmt->fetchAll() : [];
@@ -130,7 +130,7 @@ final class HomeController extends Controller
                  FROM reservations r
                  LEFT JOIN projects p ON p.id = r.project_id
                  LEFT JOIN devices d ON d.id = r.device_id
-                 ORDER BY r.reserved_from DESC
+                 ORDER BY r.id ASC
                  LIMIT 50'
             )->fetchAll() ?: [];
         } catch (PDOException $exception) {
@@ -161,7 +161,7 @@ final class HomeController extends Controller
                  FROM checkouts c
                  LEFT JOIN projects p ON p.id = c.project_id
                  LEFT JOIN devices d ON d.id = c.device_id
-                 ORDER BY c.checked_out_at DESC
+                 ORDER BY c.id ASC
                  LIMIT 50'
             )->fetchAll() ?: [];
         } catch (PDOException $exception) {
@@ -193,7 +193,7 @@ final class HomeController extends Controller
     {
         try {
             $rows = $pdo->query(
-                'SELECT * FROM notifications ORDER BY created_at DESC LIMIT 50'
+                'SELECT * FROM notifications ORDER BY id ASC LIMIT 50'
             )->fetchAll() ?: [];
         } catch (PDOException $exception) {
             error_log('Load notifications failed: ' . $exception->getMessage());
@@ -218,7 +218,7 @@ final class HomeController extends Controller
     {
         try {
             $rows = $pdo->query(
-                'SELECT id, name, email, role, created_at FROM users ORDER BY created_at DESC LIMIT 50'
+                'SELECT id, name, email, role, created_at FROM users ORDER BY id ASC LIMIT 50'
             )->fetchAll() ?: [];
         } catch (PDOException $exception) {
             error_log('Load users failed: ' . $exception->getMessage());
@@ -235,7 +235,7 @@ final class HomeController extends Controller
     {
         try {
             $rows = $pdo->query(
-                'SELECT * FROM device_transfers ORDER BY requested_at DESC LIMIT 50'
+                'SELECT * FROM device_transfers ORDER BY id ASC LIMIT 50'
             )->fetchAll() ?: [];
         } catch (PDOException $exception) {
             error_log('Load transfers failed: ' . $exception->getMessage());
