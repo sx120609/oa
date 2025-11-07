@@ -440,25 +440,6 @@
                         <div class="form-result" data-result></div>
                     </form>
                 </div>
-                <div class="form-card">
-                    <h4>归还设备</h4>
-                    <form method="post" action="/returns/create" data-ajax="true">
-                        <?= csrf_field() ?>
-                        <label>设备
-                            <select name="device_id" data-select="devices" data-placeholder="请选择设备" data-select-status="checked_out,transfer_pending" required></select>
-                        </label>
-                        <label>归还时间
-                            <div class="input-with-helper">
-                                <input type="datetime-local" name="now" required>
-                                <button type="button" class="fill-now-btn" data-fill-now>当前时间</button>
-                            </div>
-                        </label>
-                        <label>归还照片（可选）<input type="url" name="photo"></label>
-                        <label>备注<textarea name="note"></textarea></label>
-                        <button type="submit">提交归还</button>
-                        <div class="form-result" data-result></div>
-                    </form>
-                </div>
                 <div class="form-card edit-panel" data-edit-panel="checkouts">
                     <header>
                         <h4>编辑借用记录</h4>
@@ -514,27 +495,6 @@
                         </label>
                         <label>备注（可选）<textarea name="note"></textarea></label>
                         <button type="submit">提交转交请求</button>
-                        <div class="form-result" data-result></div>
-                    </form>
-                </div>
-                <div class="form-card">
-                    <h4>确认转交</h4>
-                    <form method="post" action="/transfers/confirm" data-ajax="true">
-                        <?= csrf_field() ?>
-                        <label>转交请求
-                            <select name="transfer_id" data-select="transfers" data-select-filter="pending" data-placeholder="选择待确认请求" required></select>
-                        </label>
-                        <label>目标项目（可选）
-                            <select name="project_id" data-select="projects" data-placeholder="关联项目" data-allow-empty="true"></select>
-                        </label>
-                        <label>新的归还时间（可选）
-                            <div class="input-with-helper">
-                                <input type="datetime-local" name="due_at">
-                                <button type="button" class="fill-now-btn" data-fill-now>当前时间</button>
-                            </div>
-                        </label>
-                        <label>备注（可选）<textarea name="note"></textarea></label>
-                        <button type="submit">确认接收</button>
                         <div class="form-result" data-result></div>
                     </form>
                 </div>
