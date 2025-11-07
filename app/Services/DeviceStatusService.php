@@ -49,7 +49,13 @@ final class DeviceStatusService
 
     private static function hasOpenCheckout(PDO $pdo, int $deviceId): bool
     {
-        $stmt = $pdo->prepare('SELECT 1 FROM checkouts WHERE device_id = :device_id AND return_at IS NULL LIMIT 1');
+        $stmt = $pdo->prepare(
+            'SELECT 1 FROM checkouts
+             WHERE device_id = :device_id
+               AND return_at IS NULL
+               AND checked_out_at <= NOW()
+             LIMIT 1'
+        );
         $stmt->execute([':device_id' => $deviceId]);
         return (bool) $stmt->fetchColumn();
     }
@@ -57,7 +63,11 @@ final class DeviceStatusService
     private static function hasActiveReservation(PDO $pdo, int $deviceId): bool
     {
         $stmt = $pdo->prepare(
-            'SELECT 1 FROM reservations WHERE device_id = :device_id AND reserved_to > NOW() LIMIT 1'
+            'SELECT 1 FROM reservations
+             WHERE device_id = :device_id
+               AND reserved_from <= NOW()
+               AND reserved_to > NOW()
+             LIMIT 1'
         );
         $stmt->execute([':device_id' => $deviceId]);
         return (bool) $stmt->fetchColumn();
