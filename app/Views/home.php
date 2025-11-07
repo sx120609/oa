@@ -727,7 +727,17 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
                     <td>${row.code ?? '-'}</td>
                     <td>${row.model ?? '-'}</td>
                     <td>${statusChip(row.status ?? null, 'device')}</td>
-                    <td>${row.holder_name ? `${row.holder_name}${row.holder_email ? ` (${row.holder_email})` : ''}` : '—'}</td>
+                    <td>${(() => {
+                        const status = row.status ?? '';
+                        const showHolder = status === 'checked_out' || status === 'transfer_pending';
+                        if (!showHolder) {
+                            return '—';
+                        }
+                        if (!row.holder_name) {
+                            return '待确认';
+                        }
+                        return `${row.holder_name}${row.holder_email ? ` (${row.holder_email})` : ''}`;
+                    })()}</td>
                     <td>${formatDate(row.created_at ?? null)}</td>
                     <td>
                         <button type="button" class="action-btn edit" data-edit-trigger="devices" data-record-id="${row.id ?? ''}">编辑</button>

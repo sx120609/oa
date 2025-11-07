@@ -88,15 +88,20 @@ final class HomeController extends Controller
     {
         try {
             $stmt = $pdo->query(
-                'SELECT d.*, u.name AS holder_name, u.email AS holder_email
+                'SELECT d.*, holder.name AS holder_name, holder.email AS holder_email
                  FROM devices d
                  LEFT JOIN (
-                    SELECT c.device_id, c.user_id
-                    FROM checkouts c
-                    WHERE c.return_at IS NULL
-                    ORDER BY c.device_id, c.checked_out_at DESC
+                    SELECT device_id, user_id
+                    FROM (
+                        SELECT device_id,
+                               user_id,
+                               ROW_NUMBER() OVER (PARTITION BY device_id ORDER BY checked_out_at DESC) AS rn
+                        FROM checkouts
+                        WHERE return_at IS NULL
+                    ) ranked
+                    WHERE rn = 1
                  ) AS active ON active.device_id = d.id
-                 LEFT JOIN users u ON u.id = active.user_id
+                 LEFT JOIN users holder ON holder.id = active.user_id
                  ORDER BY d.id ASC
                  LIMIT 50'
             );
