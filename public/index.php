@@ -11,6 +11,7 @@ require dirname(__DIR__) . '/vendor/autoload.php';
 require dirname(__DIR__) . '/app/helpers.php';
 
 ini_set('session.cookie_httponly', '1');
+date_default_timezone_set(env('APP_TZ') ?: 'UTC');
 
 $secure = filter_var(env('SESSION_COOKIE_SECURE') ?? 'false', FILTER_VALIDATE_BOOLEAN);
 session_set_cookie_params([
