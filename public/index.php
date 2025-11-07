@@ -59,9 +59,15 @@ $router->post('/users/create', 'UserController@create');
 $router->post('/users/delete', 'UserController@delete');
 $router->post('/users/update', 'UserController@update');
 $router->post('/projects/update', 'ProjectController@update');
+$router->post('/projects/delete', 'ProjectController@delete');
 $router->post('/devices/update', 'DeviceController@update');
+$router->post('/devices/delete', 'DeviceController@delete');
 $router->post('/reservations/update', 'ReservationController@update');
+$router->post('/reservations/delete', 'ReservationController@delete');
 $router->post('/checkouts/update', 'DeviceFlowController@updateCheckout');
+$router->post('/checkouts/delete', 'DeviceFlowController@deleteCheckout');
+$router->post('/transfers/cancel', 'DeviceFlowController@cancelTransfer');
+$router->post('/notifications/delete', 'NotificationController@delete');
 
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 

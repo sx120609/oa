@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Services\AuditLogger;
+use App\Services\DeviceStatusService;
 use App\Services\PenaltyService;
 use App\Utils\DB;
 use App\Utils\HttpException;
@@ -625,6 +626,108 @@ final class DeviceFlowController extends Controller
                 $pdo->rollBack();
             }
             throw new HttpException('更新借用记录失败', 500, $exception);
+        }
+
+        return Response::ok();
+    }
+
+    public function deleteCheckout(): string
+    {
+        $actorId = $this->requireActor();
+        if (!$this->actorIsAdmin()) {
+            throw new HttpException('未登录或无权限', 403);
+        }
+
+        $checkoutId = $this->requirePositiveInt('checkout_id');
+
+        $pdo = DB::connection();
+        try {
+            $pdo->beginTransaction();
+
+            $stmt = $pdo->prepare('SELECT device_id FROM checkouts WHERE id = :id FOR UPDATE');
+            $stmt->execute([':id' => $checkoutId]);
+            $checkout = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$checkout) {
+                throw new HttpException('借用记录不存在', 404);
+            }
+
+            $deviceId = (int) $checkout['device_id'];
+
+            $delete = $pdo->prepare('DELETE FROM checkouts WHERE id = :id LIMIT 1');
+            $delete->execute([':id' => $checkoutId]);
+
+            DeviceStatusService::refresh($pdo, $deviceId);
+
+            $pdo->commit();
+
+            AuditLogger::log($actorId, 'checkout', $checkoutId, 'delete', [
+                'device_id' => $deviceId,
+            ]);
+        } catch (HttpException $exception) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $exception;
+        } catch (PDOException $exception) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw new HttpException('删除借用记录失败', 500, $exception);
+        }
+
+        return Response::ok();
+    }
+
+    public function cancelTransfer(): string
+    {
+        $actorId = $this->requireActor();
+        $transferId = $this->requirePositiveInt('transfer_id');
+
+        $pdo = DB::connection();
+        $isAdminActor = $this->actorIsAdmin();
+
+        try {
+            $pdo->beginTransaction();
+
+            $stmt = $pdo->prepare('SELECT * FROM device_transfers WHERE id = :id FOR UPDATE');
+            $stmt->execute([':id' => $transferId]);
+            $transfer = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$transfer) {
+                throw new HttpException('转交请求不存在', 404);
+            }
+
+            if ($transfer['status'] !== 'pending') {
+                throw new HttpException('转交请求已处理', 409);
+            }
+
+            if ((int) $transfer['from_user_id'] !== $actorId && !$isAdminActor) {
+                throw new HttpException('只有发起人或管理员可以取消转交', 403);
+            }
+
+            $update = $pdo->prepare(
+                'UPDATE device_transfers SET status = "cancelled", cancelled_at = NOW() WHERE id = :id'
+            );
+            $update->execute([':id' => $transferId]);
+
+            DeviceStatusService::refresh($pdo, (int) $transfer['device_id']);
+
+            $pdo->commit();
+
+            AuditLogger::log($actorId, 'device', (int) $transfer['device_id'], 'transfer_cancel', [
+                'transfer_id' => $transferId,
+            ]);
+        } catch (HttpException $exception) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $exception;
+        } catch (PDOException $exception) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw new HttpException('取消转交失败', 500, $exception);
         }
 
         return Response::ok();
