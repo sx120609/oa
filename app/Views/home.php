@@ -406,7 +406,7 @@
             <section class="tab-content" data-tab-content="checkouts">
                 <div class="section-title"><h2>借用列表</h2><span class="badge" data-count-badge="checkouts">共 0 条</span></div>
                 <div class="data-table-wrapper">
-                    <table class="data-table"><thead><tr><th>ID</th><th>项目</th><th>设备</th><th>借出时间</th><th>到期时间</th><th>归还时间</th><th>状态</th><th>操作</th></tr></thead><tbody data-table-body="checkouts"></tbody></table>
+                    <table class="data-table"><thead><tr><th>ID</th><th>项目</th><th>设备</th><th>当前借用人</th><th>借出时间</th><th>到期时间</th><th>归还时间</th><th>状态</th><th>操作</th></tr></thead><tbody data-table-body="checkouts"></tbody></table>
                 </div>
                 <p class="empty-placeholder" data-empty="checkouts">暂无借用记录。</p>
                 <div class="form-card">
@@ -822,6 +822,8 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
                         <td>${row.id ?? '-'}</td>
                         <td>${row.project_name ?? ('#' + (row.project_id ?? '-'))}</td>
                         <td>${row.device_code ?? ('#' + (row.device_id ?? '-'))}</td>
+                        <td>${row.user_id ? 
+                            (row.user_id && row.user_name ? `#${row.user_id} ${row.user_name}` : '#' + row.user_id) : '-'}</td>
                         <td>${formatDate(row.checked_out_at ?? null)}</td>
                         <td>${formatDate(row.due_at ?? null)}</td>
                         <td>${formatDate(row.return_at ?? null)}</td>
@@ -857,9 +859,9 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
             value: item.id,
             label: `#${item.id} ${item.device_code ?? ('设备#' + (item.device_id ?? '-'))} · ${item.project_name ?? ('项目#' + (item.project_id ?? '-'))}`,
         }),
-        checkouts: (item) => ({
+            checkouts: (item) => ({
             value: item.id,
-            label: `#${item.id} ${item.device_code ?? ('设备#' + (item.device_id ?? '-'))} → 用户#${item.user_id ?? '-'}`,
+            label: `#${item.id} ${item.device_code ?? ('设备#' + (item.device_id ?? '-'))} → #${item.user_id ?? '-'}${item.user_name ? ' ' + item.user_name : ''}`,
             status: item.return_at ? 'closed' : 'open',
         }),
         transfers: (item) => ({
