@@ -15,6 +15,43 @@ use PDOException;
 
 final class DeviceFlowController extends Controller
 {
+    private static bool $transferTableEnsured = false;
+
+    private function ensureTransferTable(PDO $pdo): void
+    {
+        if (self::$transferTableEnsured) {
+            return;
+        }
+
+        $sql = <<<SQL
+CREATE TABLE IF NOT EXISTS device_transfers (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    device_id BIGINT UNSIGNED NOT NULL,
+    from_checkout_id BIGINT UNSIGNED NOT NULL,
+    from_user_id BIGINT UNSIGNED NOT NULL,
+    to_user_id BIGINT UNSIGNED NOT NULL,
+    target_project_id BIGINT UNSIGNED NULL,
+    target_due_at DATETIME NULL,
+    transfer_type ENUM('checkout', 'reservation') NOT NULL DEFAULT 'checkout',
+    status ENUM('pending', 'accepted', 'rejected', 'cancelled') NOT NULL DEFAULT 'pending',
+    note TEXT NULL,
+    requested_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    confirmed_at DATETIME NULL,
+    cancelled_at DATETIME NULL,
+    INDEX idx_transfers_device_status (device_id, status),
+    INDEX idx_transfers_to_user (to_user_id, status),
+    CONSTRAINT fk_device_transfers_device FOREIGN KEY (device_id) REFERENCES devices (id) ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT fk_device_transfers_from_checkout FOREIGN KEY (from_checkout_id) REFERENCES checkouts (id) ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT fk_device_transfers_from_user FOREIGN KEY (from_user_id) REFERENCES users (id) ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT fk_device_transfers_to_user FOREIGN KEY (to_user_id) REFERENCES users (id) ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT fk_device_transfers_target_project FOREIGN KEY (target_project_id) REFERENCES projects (id) ON UPDATE CASCADE ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+SQL;
+
+        $pdo->exec($sql);
+        self::$transferTableEnsured = true;
+    }
+
     public function reserve(): string
     {
         $actorId = $this->requireActor();
@@ -351,6 +388,7 @@ final class DeviceFlowController extends Controller
         $isAdminActor = $this->actorIsAdmin();
 
         $pdo = DB::connection();
+        $this->ensureTransferTable($pdo);
 
         try {
             $pdo->beginTransaction();
@@ -467,6 +505,7 @@ final class DeviceFlowController extends Controller
         $isAdminActor = $this->actorIsAdmin();
 
         $pdo = DB::connection();
+        $this->ensureTransferTable($pdo);
 
         try {
             $pdo->beginTransaction();
@@ -603,6 +642,7 @@ final class DeviceFlowController extends Controller
         $note = $this->optionalString('note');
 
         $pdo = DB::connection();
+        $this->ensureTransferTable($pdo);
 
         try {
             $pdo->beginTransaction();
