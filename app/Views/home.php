@@ -413,7 +413,7 @@
                     <form method="post" action="/checkouts/create" data-ajax="true">
                         <?= csrf_field() ?>
                         <label>设备
-                            <select name="device_id" data-select="devices" data-placeholder="请选择设备" data-select-status="checked_out,transfer_pending" required></select>
+                            <select name="device_id" data-select="devices" data-placeholder="请选择设备" required></select>
                         </label>
                         <label>借出用户
                             <select name="user_id" data-select="users" data-placeholder="请选择借用人" data-allow-empty="true" required></select>
@@ -444,7 +444,7 @@
                     <form method="post" action="/returns/create" data-ajax="true">
                         <?= csrf_field() ?>
                         <label>设备
-                            <select name="device_id" data-select="devices" data-placeholder="请选择设备" required></select>
+                            <select name="device_id" data-select="devices" data-placeholder="请选择设备" data-select-status="checked_out,transfer_pending" required></select>
                         </label>
                         <label>归还时间
                             <div class="input-with-helper">
