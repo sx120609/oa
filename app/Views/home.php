@@ -353,18 +353,8 @@
                         <label>设备
                             <select name="device_id" data-select="devices" data-placeholder="请选择设备" required></select>
                         </label>
-                        <label>开始时间
-                            <div class="input-with-helper">
-                                <input type="datetime-local" name="from" required>
-                                <button type="button" class="fill-now-btn" data-fill-now>当前时间</button>
-                            </div>
-                        </label>
-                        <label>结束时间
-                            <div class="input-with-helper">
-                                <input type="datetime-local" name="to" required>
-                                <button type="button" class="fill-now-btn" data-fill-now>当前时间</button>
-                            </div>
-                        </label>
+                        <label>开始时间<input type="datetime-local" name="from" required></label>
+                        <label>结束时间<input type="datetime-local" name="to" required></label>
                         <button type="submit">提交预留</button>
                         <div class="form-result" data-result></div>
                     </form>
@@ -385,18 +375,8 @@
                         <label>设备
                             <select name="device_id" data-select="devices" data-placeholder="请选择设备" required></select>
                         </label>
-                        <label>开始时间
-                            <div class="input-with-helper">
-                                <input type="datetime-local" name="from" required>
-                                <button type="button" class="fill-now-btn" data-fill-now>当前时间</button>
-                            </div>
-                        </label>
-                        <label>结束时间
-                            <div class="input-with-helper">
-                                <input type="datetime-local" name="to" required>
-                                <button type="button" class="fill-now-btn" data-fill-now>当前时间</button>
-                            </div>
-                        </label>
+                        <label>开始时间<input type="datetime-local" name="from" required></label>
+                        <label>结束时间<input type="datetime-local" name="to" required></label>
                         <button type="submit">保存修改</button>
                         <div class="form-result" data-result></div>
                     </form>
