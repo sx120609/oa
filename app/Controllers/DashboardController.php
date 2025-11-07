@@ -170,10 +170,11 @@ final class DashboardController extends Controller
     {
         try {
             $rows = $pdo->query(
-                'SELECT c.*, p.name AS project_name, d.code AS device_code
+                'SELECT c.*, p.name AS project_name, d.code AS device_code, u.name AS user_name
                  FROM checkouts c
                  LEFT JOIN projects p ON p.id = c.project_id
                  LEFT JOIN devices d ON d.id = c.device_id
+                 LEFT JOIN users u ON u.id = c.user_id
                  ORDER BY c.id ASC
                  LIMIT 50'
             )->fetchAll() ?: [];
@@ -196,6 +197,7 @@ final class DashboardController extends Controller
             'created_at' => $row['created_at'] ?? null,
             'project_name' => $row['project_name'] ?? null,
             'device_code' => $row['device_code'] ?? null,
+            'user_name' => $row['user_name'] ?? null,
         ], $rows);
     }
 
