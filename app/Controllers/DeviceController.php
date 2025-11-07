@@ -123,4 +123,32 @@ final class DeviceController extends Controller
 
         return Response::ok();
     }
+
+    public function delete(): string
+    {
+        $actorId = $this->requireActor();
+        if (!$this->actorIsAdmin()) {
+            throw new HttpException('未登录或无权限', 403);
+        }
+
+        $deviceId = $this->requirePositiveInt('device_id');
+
+        try {
+            $pdo = DB::connection();
+            $stmt = $pdo->prepare('DELETE FROM devices WHERE id = :id LIMIT 1');
+            $stmt->execute([':id' => $deviceId]);
+
+            if ($stmt->rowCount() === 0) {
+                throw new HttpException('设备不存在', 404);
+            }
+        } catch (HttpException $exception) {
+            throw $exception;
+        } catch (PDOException $exception) {
+            throw new HttpException('删除设备失败，可能存在关联记录', 500, $exception);
+        }
+
+        AuditLogger::log($actorId, 'device', $deviceId, 'delete');
+
+        return Response::ok();
+    }
 }

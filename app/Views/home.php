@@ -468,7 +468,7 @@
             <section class="tab-content" data-tab-content="transfers">
                 <div class="section-title"><h2>转交请求</h2><span class="badge" data-count-badge="transfers">共 0 条</span></div>
                 <div class="data-table-wrapper">
-                    <table class="data-table"><thead><tr><th>ID</th><th>设备</th><th>当前持有者</th><th>接收人</th><th>目标项目</th><th>目标归还时间</th><th>状态</th><th>发起时间</th></tr></thead><tbody data-table-body="transfers"></tbody></table>
+                    <table class="data-table"><thead><tr><th>ID</th><th>设备</th><th>当前持有者</th><th>接收人</th><th>目标项目</th><th>目标归还时间</th><th>状态</th><th>发起时间</th><th>操作</th></tr></thead><tbody data-table-body="transfers"></tbody></table>
                 </div>
                 <p class="empty-placeholder" data-empty="transfers">暂无转交请求。</p>
                 <div class="form-card">
@@ -520,7 +520,7 @@
             <section class="tab-content" data-tab-content="notifications">
                 <div class="section-title"><h2>通知中心</h2><span class="badge" data-count-badge="notifications">共 0 条</span></div>
                 <div class="data-table-wrapper">
-                    <table class="data-table"><thead><tr><th>ID</th><th>用户</th><th>标题</th><th>内容</th><th>发送时间</th><th>已送达</th></tr></thead><tbody data-table-body="notifications"></tbody></table>
+                    <table class="data-table"><thead><tr><th>ID</th><th>用户</th><th>标题</th><th>内容</th><th>发送时间</th><th>已送达</th><th>操作</th></tr></thead><tbody data-table-body="notifications"></tbody></table>
                 </div>
                 <p class="empty-placeholder" data-empty="notifications">暂无通知记录。</p>
             </section>
@@ -682,7 +682,7 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
                     <td>${formatDate(row.created_at ?? null)}</td>
                     <td>
                         <button type="button" class="action-btn edit" data-edit-trigger="users" data-record-id="${row.id ?? ''}">编辑</button>
-                        <button type="button" class="action-btn delete" data-delete-user="${row.id ?? ''}">删除</button>
+                        <button type="button" class="action-btn delete" data-delete-record="users" data-record-id="${row.id ?? ''}">删除</button>
                     </td>
                 </tr>
             `,
@@ -698,6 +698,11 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
                         <td>${formatDate(row.target_due_at ?? null)}</td>
                         <td>${statusMap[row.status ?? ''] ?? (row.status ?? '-')}</td>
                         <td>${formatDate(row.requested_at ?? null)}</td>
+                        <td>
+                            ${row.status === 'pending'
+                                ? `<button type="button" class="action-btn delete" data-delete-record="transfers" data-record-id="${row.id ?? ''}">取消</button>`
+                                : '—'}
+                        </td>
                     </tr>
                 `;
             },
@@ -710,7 +715,10 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
                     <td>${formatDate(row.starts_at ?? null)}</td>
                     <td>${formatDate(row.due_at ?? null)}</td>
                     <td>${formatDate(row.created_at ?? null)}</td>
-                    <td><button type="button" class="action-btn edit" data-edit-trigger="projects" data-record-id="${row.id ?? ''}">编辑</button></td>
+                    <td>
+                        <button type="button" class="action-btn edit" data-edit-trigger="projects" data-record-id="${row.id ?? ''}">编辑</button>
+                        <button type="button" class="action-btn delete" data-delete-record="projects" data-record-id="${row.id ?? ''}">删除</button>
+                    </td>
                 </tr>
             `,
             devices: (row) => `
@@ -721,7 +729,10 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
                     <td>${statusChip(row.status ?? null, 'device')}</td>
                     <td>${row.holder_name ? `${row.holder_name}${row.holder_email ? ` (${row.holder_email})` : ''}` : '—'}</td>
                     <td>${formatDate(row.created_at ?? null)}</td>
-                    <td><button type="button" class="action-btn edit" data-edit-trigger="devices" data-record-id="${row.id ?? ''}">编辑</button></td>
+                    <td>
+                        <button type="button" class="action-btn edit" data-edit-trigger="devices" data-record-id="${row.id ?? ''}">编辑</button>
+                        <button type="button" class="action-btn delete" data-delete-record="devices" data-record-id="${row.id ?? ''}">删除</button>
+                    </td>
                 </tr>
             `,
             reservations: (row) => `
@@ -732,7 +743,10 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
                     <td>${formatDate(row.reserved_from ?? null)}</td>
                     <td>${formatDate(row.reserved_to ?? null)}</td>
                     <td>${formatDate(row.created_at ?? null)}</td>
-                    <td><button type="button" class="action-btn edit" data-edit-trigger="reservations" data-record-id="${row.id ?? ''}">编辑</button></td>
+                    <td>
+                        <button type="button" class="action-btn edit" data-edit-trigger="reservations" data-record-id="${row.id ?? ''}">编辑</button>
+                        <button type="button" class="action-btn delete" data-delete-record="reservations" data-record-id="${row.id ?? ''}">删除</button>
+                    </td>
                 </tr>
             `,
             checkouts: (row) => {
@@ -746,7 +760,10 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
                         <td>${formatDate(row.due_at ?? null)}</td>
                         <td>${formatDate(row.return_at ?? null)}</td>
                         <td><span class="status-chip ${returned ? 'success' : 'warning'}">${returned ? '已归还' : '借出中'}</span></td>
-                        <td><button type="button" class="action-btn edit" data-edit-trigger="checkouts" data-record-id="${row.id ?? ''}">编辑</button></td>
+                        <td>
+                            <button type="button" class="action-btn edit" data-edit-trigger="checkouts" data-record-id="${row.id ?? ''}">编辑</button>
+                            <button type="button" class="action-btn delete" data-delete-record="checkouts" data-record-id="${row.id ?? ''}">删除</button>
+                        </td>
                     </tr>
                 `;
             },
@@ -758,6 +775,7 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
                     <td>${row.body ?? '-'}</td>
                     <td>${formatDate(row.created_at ?? null)}</td>
                     <td>${row.delivered_at ? formatDate(row.delivered_at) : '未送达'}</td>
+                    <td><button type="button" class="action-btn delete" data-delete-record="notifications" data-record-id="${row.id ?? ''}">删除</button></td>
                 </tr>
             `,
         };
@@ -883,6 +901,16 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
                 setFieldValue(form, 'note', item?.note ?? '');
             },
         },
+    };
+
+    const deleteConfigs = {
+        users: { url: '/users/delete', idField: 'user_id', confirm: '确认删除该用户？' },
+        projects: { url: '/projects/delete', idField: 'project_id', confirm: '确认删除该项目？相关记录可能会被清理。' },
+        devices: { url: '/devices/delete', idField: 'device_id', confirm: '确认删除该设备？' },
+        reservations: { url: '/reservations/delete', idField: 'reservation_id', confirm: '确认删除该预留记录？' },
+        checkouts: { url: '/checkouts/delete', idField: 'checkout_id', confirm: '确认删除该借用记录？' },
+        transfers: { url: '/transfers/cancel', idField: 'transfer_id', confirm: '确认取消该转交请求？' },
+        notifications: { url: '/notifications/delete', idField: 'notification_id', confirm: '确认删除该通知？' },
     };
 
     const syncEditForm = (key) => {
@@ -1187,17 +1215,24 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
             return;
         }
 
-        const deleteBtn = event.target.closest('[data-delete-user]');
+        const deleteBtn = event.target.closest('[data-delete-record]');
         if (deleteBtn) {
-            const userId = deleteBtn.getAttribute('data-delete-user');
-            if (!userId || !confirm('确认删除该用户？')) {
+            const dataset = deleteBtn.getAttribute('data-delete-record');
+            const recordId = deleteBtn.getAttribute('data-record-id');
+            const config = dataset ? deleteConfigs[dataset] : null;
+            if (!config || !recordId) {
+                showGlobalMessage('error', '缺少删除参数');
+                return;
+            }
+            const confirmed = window.confirm(config.confirm ?? '确认删除该记录？');
+            if (!confirmed) {
                 return;
             }
             try {
                 const formData = new FormData();
                 formData.append('_token', csrfToken);
-                formData.append('user_id', userId);
-                const res = await fetch('/users/delete', {
+                formData.append(config.idField, recordId);
+                const res = await fetch(config.url, {
                     method: 'POST',
                     body: formData,
                     headers: { 'X-Requested-With': 'XMLHttpRequest' },
@@ -1205,11 +1240,9 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
                 });
                 const text = await res.text();
                 const { type, message } = parseResponse(text, res.status, res.statusText);
+                showGlobalMessage(type === 'success' ? 'success' : 'error', message || (type === 'success' ? '删除成功' : '删除失败'));
                 if (type === 'success') {
-                    showGlobalMessage('success', message || '删除成功');
                     await refreshStatus();
-                } else {
-                    showGlobalMessage('error', message || '删除失败');
                 }
             } catch (error) {
                 showGlobalMessage('error', error instanceof Error ? error.message : '删除失败');
