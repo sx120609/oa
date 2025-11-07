@@ -58,15 +58,22 @@ SQL;
 
         $projectId = $this->requirePositiveInt('project_id');
         $deviceId = $this->requirePositiveInt('device_id');
-        $reservedFrom = $this->timestampFromPost('from');
-        $reservedTo = $this->timestampFromPost('to');
+        $fromDateTime = $this->parseDateTimeField('from');
+        $toDateTime = $this->parseDateTimeField('to');
 
-        if ($reservedFrom >= $reservedTo) {
+        if ($fromDateTime === null || $toDateTime === null) {
+            throw new HttpException('预留时间缺失', 409);
+        }
+
+        if ($fromDateTime->getTimestamp() >= $toDateTime->getTimestamp()) {
             throw new HttpException('时间范围不合法', 409);
         }
 
-        $fromValue = date('Y-m-d H:i:s', $reservedFrom);
-        $toValue = date('Y-m-d H:i:s', $reservedTo);
+        $reservedFrom = $fromDateTime->getTimestamp();
+        $reservedTo = $toDateTime->getTimestamp();
+
+        $fromValue = $fromDateTime->format('Y-m-d H:i:s');
+        $toValue = $toDateTime->format('Y-m-d H:i:s');
 
         $pdo = DB::connection();
 

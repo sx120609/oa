@@ -21,20 +21,32 @@ final class ReservationController extends Controller
         $reservationId = $this->requirePositiveInt('reservation_id');
         $projectId = $this->requirePositiveInt('project_id');
         $deviceId = $this->requirePositiveInt('device_id');
-        $reservedFrom = $this->timestampFromPost('from');
-        $reservedTo = $this->timestampFromPost('to');
+        $fromDateTime = $this->parseDateTimeField('from');
+        $toDateTime = $this->parseDateTimeField('to');
 
-        if ($reservedFrom >= $reservedTo) {
+        if ($fromDateTime === null || $toDateTime === null) {
+            throw new HttpException('预留时间缺失', 409);
+        }
+
+        if ($fromDateTime->getTimestamp() >= $toDateTime->getTimestamp()) {
             throw new HttpException('时间范围不合法', 409);
         }
 
-        $fromValue = date('Y-m-d H:i:s', $reservedFrom);
-        $toValue = date('Y-m-d H:i:s', $reservedTo);
+        $fromValue = $fromDateTime->format('Y-m-d H:i:s');
+        $toValue = $toDateTime->format('Y-m-d H:i:s');
 
         $pdo = DB::connection();
 
         try {
             $pdo->beginTransaction();
+
+            $existingStmt = $pdo->prepare('SELECT * FROM reservations WHERE id = :id FOR UPDATE');
+            $existingStmt->execute([':id' => $reservationId]);
+            $existing = $existingStmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$existing) {
+                throw new HttpException('预留记录不存在', 404);
+            }
 
             $conflict = $pdo->prepare(
                 'SELECT 1 FROM reservations
@@ -90,10 +102,6 @@ final class ReservationController extends Controller
                 ':to_time' => $toValue,
                 ':id' => $reservationId,
             ]);
-
-            if ($stmt->rowCount() === 0) {
-                throw new HttpException('预留记录不存在或无修改', 404);
-            }
 
             $pdo->commit();
 
