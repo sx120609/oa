@@ -413,7 +413,7 @@
                     <form method="post" action="/checkouts/create" data-ajax="true">
                         <?= csrf_field() ?>
                         <label>设备
-                            <select name="device_id" data-select="devices" data-placeholder="请选择设备" required></select>
+                            <select name="device_id" data-select="devices" data-placeholder="请选择设备" data-select-status="checked_out,transfer_pending" required></select>
                         </label>
                         <label>借出用户
                             <select name="user_id" data-select="users" data-placeholder="请选择借用人" data-allow-empty="true" required></select>
@@ -819,7 +819,7 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
     const selectBuilders = {
         users: (item) => ({ value: item.id, label: `#${item.id} ${item.name ?? ''} (${item.email ?? ''})` }),
         projects: (item) => ({ value: item.id, label: `#${item.id} ${item.name ?? ''}` }),
-        devices: (item) => ({ value: item.id, label: `#${item.id} ${item.code ?? ''}${item.model ? ' · ' + item.model : ''}` }),
+        devices: (item) => ({ value: item.id, label: `#${item.id} ${item.code ?? ''}${item.model ? ' · ' + item.model : ''}`, status: item.status ?? '' }),
         reservations: (item) => ({
             value: item.id,
             label: `#${item.id} ${item.device_code ?? ('设备#' + (item.device_id ?? '-'))} · ${item.project_name ?? ('项目#' + (item.project_id ?? '-'))}`,
@@ -1050,7 +1050,10 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
                 return;
             }
             const records = data[key] ?? [];
-            const filterStatus = select.dataset.selectFilter;
+            const filterStatus = select.dataset.selectFilter ? select.dataset.selectFilter.toLowerCase() : null;
+            const selectStatus = select.dataset.selectStatus
+                ? select.dataset.selectStatus.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean)
+                : null;
             const allowEmpty = select.dataset.allowEmpty === 'true';
             const placeholder = select.dataset.placeholder || '请选择';
             const previous = select.value;
@@ -1069,8 +1072,11 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
                 if (!built) {
                     return;
                 }
-                const status = built.status ?? item.status ?? null;
+                const status = (built.status ?? item.status ?? '').toLowerCase();
                 if (filterStatus && status !== filterStatus) {
+                    return;
+                }
+                if (selectStatus && !selectStatus.includes(status)) {
                     return;
                 }
                 const opt = document.createElement('option');
