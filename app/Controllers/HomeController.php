@@ -244,7 +244,16 @@ final class HomeController extends Controller
     {
         try {
             $rows = $pdo->query(
-                'SELECT * FROM device_transfers ORDER BY id ASC LIMIT 50'
+                'SELECT dt.*,
+                        fu.name AS from_user_name,
+                        fu.email AS from_user_email,
+                        tu.name AS to_user_name,
+                        tu.email AS to_user_email
+                 FROM device_transfers dt
+                 LEFT JOIN users fu ON fu.id = dt.from_user_id
+                 LEFT JOIN users tu ON tu.id = dt.to_user_id
+                 ORDER BY dt.id ASC
+                 LIMIT 50'
             )->fetchAll() ?: [];
         } catch (PDOException $exception) {
             error_log('Load transfers failed: ' . $exception->getMessage());
