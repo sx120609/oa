@@ -349,12 +349,28 @@ final class DeviceFlowController extends Controller
         $note = $this->optionalString('note');
 
         $isAdminActor = $this->actorIsAdmin();
-        $currentHolderId = null;
 
         $pdo = DB::connection();
 
         try {
             $pdo->beginTransaction();
+
+            $deviceStmt = $pdo->prepare('SELECT id, status FROM devices WHERE id = :id FOR UPDATE');
+            $deviceStmt->execute([':id' => $deviceId]);
+            $device = $deviceStmt->fetch(PDO::FETCH_ASSOC);
+            if (!$device) {
+                throw new HttpException('设备不存在', 404);
+            }
+
+            if (!in_array($device['status'], ['checked_out', 'transfer_pending'], true)) {
+                throw new HttpException('设备当前状态不支持转交', 409);
+            }
+
+            $userCheck = $pdo->prepare('SELECT id FROM users WHERE id = :id LIMIT 1');
+            $userCheck->execute([':id' => $toUserId]);
+            if (!$userCheck->fetchColumn()) {
+                throw new HttpException('接收用户不存在', 404);
+            }
 
             $existingPending = $pdo->prepare(
                 'SELECT id FROM device_transfers WHERE device_id = :device_id AND status = "pending" LIMIT 1'
@@ -373,6 +389,7 @@ final class DeviceFlowController extends Controller
             if (!$checkout) {
                 throw new HttpException('当前设备未借出，无法发起转交', 409);
             }
+
             $currentHolderId = (int) $checkout['user_id'];
 
             if ($currentHolderId === $toUserId) {
@@ -380,7 +397,15 @@ final class DeviceFlowController extends Controller
             }
 
             if ($currentHolderId !== $actorId && !$isAdminActor) {
-                throw new HttpException('只有当前借用人可以发起转交', 409);
+                throw new HttpException('只有当前借用人或管理员可以发起转交', 403);
+            }
+
+            if ($projectId !== null) {
+                $projStmt = $pdo->prepare('SELECT id FROM projects WHERE id = :id LIMIT 1');
+                $projStmt->execute([':id' => $projectId]);
+                if (!$projStmt->fetchColumn()) {
+                    throw new HttpException('目标项目不存在', 404);
+                }
             }
 
             $insert = $pdo->prepare(
@@ -405,6 +430,15 @@ final class DeviceFlowController extends Controller
             ]);
 
             $pdo->commit();
+
+            AuditLogger::log($actorId, 'device', $deviceId, 'transfer_request', [
+                'initiator' => $actorId,
+                'current_holder' => $currentHolderId,
+                'to_user' => $toUserId,
+                'project' => $projectId,
+                'due_at' => $dueAt,
+                'note' => $note,
+            ]);
         } catch (HttpException $exception) {
             if ($pdo->inTransaction()) {
                 $pdo->rollBack();
@@ -416,15 +450,6 @@ final class DeviceFlowController extends Controller
             }
             throw new HttpException('转交申请失败', 500, $exception);
         }
-
-        AuditLogger::log($actorId, 'device', $deviceId, 'transfer_request', [
-            'initiator' => $actorId,
-            'current_holder' => $currentHolderId ?? null,
-            'to_user' => $toUserId,
-            'project' => $projectId,
-            'due_at' => $dueAt,
-            'note' => $note,
-        ]);
 
         return Response::ok();
     }
@@ -443,10 +468,6 @@ final class DeviceFlowController extends Controller
 
         $pdo = DB::connection();
 
-        $transfer = null;
-        $projectId = $projectIdOverride ?? null;
-        $dueAt = $dueAtOverride;
-
         try {
             $pdo->beginTransaction();
 
@@ -462,8 +483,19 @@ final class DeviceFlowController extends Controller
             if ($transfer['status'] !== 'pending') {
                 throw new HttpException('转交请求已处理', 409);
             }
+
             if ((int) $transfer['to_user_id'] !== $actorId && !$isAdminActor) {
                 throw new HttpException('只有接收人或管理员可以确认转交', 403);
+            }
+
+            $deviceStmt = $pdo->prepare('SELECT id, status FROM devices WHERE id = :id FOR UPDATE');
+            $deviceStmt->execute([':id' => $transfer['device_id']]);
+            $device = $deviceStmt->fetch(PDO::FETCH_ASSOC);
+            if (!$device) {
+                throw new HttpException('设备不存在', 404);
+            }
+            if (!in_array($device['status'], ['transfer_pending', 'checked_out'], true)) {
+                throw new HttpException('设备当前状态不支持转交', 409);
             }
 
             $checkoutStmt = $pdo->prepare(
@@ -475,19 +507,16 @@ final class DeviceFlowController extends Controller
                 throw new HttpException('原借用记录不存在或已结束', 409);
             }
 
-            $deviceStmt = $pdo->prepare('SELECT status FROM devices WHERE id = :id FOR UPDATE');
-            $deviceStmt->execute([':id' => $transfer['device_id']]);
-            $deviceRow = $deviceStmt->fetch(PDO::FETCH_ASSOC);
-            if (!$deviceRow) {
-                throw new HttpException('设备不存在', 404);
-            }
-            if ($deviceRow['status'] !== 'transfer_pending' && $deviceRow['status'] !== 'checked_out') {
-                throw new HttpException('设备当前状态不支持转交', 409);
-            }
+            $projectId = $projectIdOverride
+                ?? ($transfer['target_project_id'] ? (int) $transfer['target_project_id'] : null)
+                ?? ($checkout['project_id'] ? (int) $checkout['project_id'] : null);
 
-            $projectId = $projectIdOverride ?? ($transfer['target_project_id'] ? (int) $transfer['target_project_id'] : null);
-            if ($projectId === null && $checkout['project_id']) {
-                $projectId = (int) $checkout['project_id'];
+            if ($projectId !== null) {
+                $projStmt = $pdo->prepare('SELECT id FROM projects WHERE id = :id LIMIT 1');
+                $projStmt->execute([':id' => $projectId]);
+                if (!$projStmt->fetchColumn()) {
+                    throw new HttpException('目标项目不存在', 404);
+                }
             }
 
             $dueAt = $dueAtOverride ?? ($transfer['target_due_at'] ?: $checkout['due_at']);
@@ -515,11 +544,13 @@ final class DeviceFlowController extends Controller
                 ':user_id' => $transfer['to_user_id'],
                 ':checked_out_at' => $receiveAt,
                 ':due_at' => $dueAt,
-                ':note' => $note ? "转交接收：{$note}" : null,
+                ':note' => $note ? "转交接收：{$note}" : '转交接收',
             ]);
 
             $updateTransfer = $pdo->prepare(
-                'UPDATE device_transfers SET status = "accepted", confirmed_at = NOW(), target_project_id = :project_id, target_due_at = :due_at WHERE id = :id'
+                'UPDATE device_transfers
+                 SET status = "accepted", confirmed_at = NOW(), target_project_id = :project_id, target_due_at = :due_at
+                 WHERE id = :id'
             );
             $updateTransfer->execute([
                 ':project_id' => $projectId,
@@ -534,6 +565,13 @@ final class DeviceFlowController extends Controller
             ]);
 
             $pdo->commit();
+
+            AuditLogger::log($actorId, 'device', (int) $transfer['device_id'], 'transfer_confirm', [
+                'from_user' => $transfer['from_user_id'],
+                'to_user' => $transfer['to_user_id'],
+                'project' => $projectId,
+                'due_at' => $dueAt,
+            ]);
         } catch (HttpException $exception) {
             if ($pdo->inTransaction()) {
                 $pdo->rollBack();
@@ -545,12 +583,6 @@ final class DeviceFlowController extends Controller
             }
             throw new HttpException('确认转交失败', 500, $exception);
         }
-
-        AuditLogger::log($actorId, 'device', (int) ($transfer['device_id'] ?? 0), 'transfer_confirm', [
-            'from_user' => $transfer['from_user_id'] ?? null,
-            'project' => $projectId,
-            'due_at' => $dueAt,
-        ]);
 
         return Response::ok();
     }
