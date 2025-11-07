@@ -7,6 +7,9 @@ namespace App\Controllers;
 use App\Utils\HttpException;
 use Throwable;
 
+use DateTimeImmutable;
+use DateTimeZone;
+
 abstract class Controller
 {
     protected function actorId(): ?int
@@ -96,7 +99,7 @@ abstract class Controller
         return (int) $value;
     }
 
-    protected function timestampFromPost(string $key, bool $required = true): ?int
+    protected function parseDateTimeField(string $key, bool $required = true): ?DateTimeImmutable
     {
         $value = $required ? $this->requireString($key) : ($this->optionalString($key) ?? '');
 
@@ -104,13 +107,34 @@ abstract class Controller
             return null;
         }
 
-        $normalized = str_replace('T', ' ', $value);
+        $normalized = str_replace(' ', 'T', trim($value));
+        $timezoneId = env('APP_TZ') ?: date_default_timezone_get();
+        $timezone = new DateTimeZone($timezoneId);
+        $formats = ['Y-m-d\TH:i:s', 'Y-m-d\TH:i'];
+
+        foreach ($formats as $format) {
+            $dateTime = DateTimeImmutable::createFromFormat($format, $normalized, $timezone);
+            if ($dateTime !== false) {
+                return $dateTime;
+            }
+        }
+
         $timestamp = strtotime($normalized);
         if ($timestamp === false) {
             throw new HttpException(sprintf('字段 %s 不合法', $key), 409);
         }
 
-        return $timestamp;
+        return (new DateTimeImmutable('@' . $timestamp))->setTimezone($timezone);
+    }
+
+    protected function timestampFromPost(string $key, bool $required = true): ?int
+    {
+        $dateTime = $this->parseDateTimeField($key, $required);
+        if ($dateTime === null) {
+            return null;
+        }
+
+        return $dateTime->getTimestamp();
     }
 
     protected function decimalFromPost(string $key, float $default = 0.0): float

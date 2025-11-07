@@ -1224,6 +1224,15 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
         form.addEventListener('submit', async (event) => {
             event.preventDefault();
             const formData = new FormData(form);
+            form.querySelectorAll('input[type="datetime-local"]').forEach((input) => {
+                if (!input.name) return;
+                const raw = input.value;
+                if (!raw) {
+                    formData.delete(input.name);
+                    return;
+                }
+                formData.set(input.name, raw.replace('T', ' '));
+            });
             if (submitBtn) {
                 submitBtn.disabled = true;
                 submitBtn.dataset.originalText = submitBtn.dataset.originalText || submitBtn.textContent;
