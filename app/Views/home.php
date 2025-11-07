@@ -672,10 +672,22 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
         if (!rows.length) { if (emptyTip) emptyTip.style.display = ''; return; }
         if (emptyTip) emptyTip.style.display = 'none';
 
+        const pad = (num) => String(num).padStart(2, '0');
         const formatDate = (value) => {
             if (!value) return '-';
-            const date = new Date(value.replace(' ', 'T'));
-            return Number.isNaN(date.getTime()) ? value : date.toISOString().slice(0, 16).replace('T', ' ');
+            const original = String(value).trim();
+            if (original === '') return '-';
+            if (/^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}/.test(original)) {
+                return original.slice(0, 16);
+            }
+            if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(original)) {
+                return original.replace('T', ' ').slice(0, 16);
+            }
+            const parsed = new Date(original);
+            if (Number.isNaN(parsed.getTime())) {
+                return original;
+            }
+            return `${parsed.getFullYear()}-${pad(parsed.getMonth() + 1)}-${pad(parsed.getDate())} ${pad(parsed.getHours())}:${pad(parsed.getMinutes())}`;
         };
 
         const statusChip = (status, scope) => {
