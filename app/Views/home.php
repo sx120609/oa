@@ -738,7 +738,7 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
                             ${row.status === 'pending'
                                 ? `<button type="button" class="action-btn primary" data-confirm-transfer="${row.id ?? ''}">确认</button>
                                    <button type="button" class="action-btn delete" data-delete-record="transfers" data-record-id="${row.id ?? ''}">取消</button>`
-                                : '—'}
+                                : `<button type="button" class="action-btn delete" data-delete-record="transfers" data-record-id="${row.id ?? ''}">删除</button>`}
                         </td>
                     </tr>
                 `;
