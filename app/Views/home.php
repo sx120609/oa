@@ -75,6 +75,12 @@
         .input-with-helper input { flex: 1 1 auto; }
         .fill-now-btn { border: none; background: rgba(37, 99, 235, 0.12); color: var(--primary); border-radius: 0.6rem; padding: 0.4rem 0.8rem; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: background 0.15s ease, color 0.15s ease; }
         .fill-now-btn:hover { background: rgba(37, 99, 235, 0.18); color: #1d4ed8; }
+        .edit-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.45); backdrop-filter: blur(2px); z-index: 1000; display: none; }
+        .edit-overlay.show { display: block; }
+        .edit-panel { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: min(520px, 92%); max-height: 90vh; overflow-y: auto; z-index: 1001; margin: 0; box-shadow: 0 15px 40px rgba(15, 23, 42, 0.25); }
+        .edit-panel.show { display: block; }
+        .edit-panel header { display: flex; align-items: center; justify-content: space-between; margin: -0.4rem -0.4rem 0.8rem; padding: 0 0.4rem; }
+        .edit-close { border: none; background: transparent; font-size: 1.3rem; padding: 0.25rem; cursor: pointer; color: var(--muted); }
         .global-message { display: none; margin: 1rem 0; padding: 0.9rem 1rem; border-radius: 0.9rem; font-size: 0.95rem; font-weight: 500; border: 1px solid transparent; }
         .global-message.show { display: block; }
         .global-message[data-type="success"] { background: rgba(22, 163, 74, 0.14); border-color: rgba(22, 163, 74, 0.4); color: #166534; }
@@ -191,8 +197,11 @@
                         <div class="form-result" data-result></div>
                     </form>
                 </div>
-                <div class="form-card">
-                    <h4>编辑用户</h4>
+                <div class="form-card edit-panel" data-edit-panel="users">
+                    <header>
+                        <h4>编辑用户</h4>
+                        <button type="button" class="edit-close" data-edit-close>&times;</button>
+                    </header>
                     <form method="post" action="/users/update" data-ajax="true" data-edit-form="users" data-reset-on-success="false">
                         <?= csrf_field() ?>
                         <label>选择用户
@@ -245,8 +254,11 @@
                         <div class="form-result" data-result></div>
                     </form>
                 </div>
-                <div class="form-card">
-                    <h4>编辑项目</h4>
+                <div class="form-card edit-panel" data-edit-panel="projects">
+                    <header>
+                        <h4>编辑项目</h4>
+                        <button type="button" class="edit-close" data-edit-close>&times;</button>
+                    </header>
                     <form method="post" action="/projects/update" data-ajax="true" data-edit-form="projects" data-reset-on-success="false">
                         <?= csrf_field() ?>
                         <label>选择项目
@@ -297,8 +309,11 @@
                         <div class="form-result" data-result></div>
                     </form>
                 </div>
-                <div class="form-card">
-                    <h4>编辑设备</h4>
+                <div class="form-card edit-panel" data-edit-panel="devices">
+                    <header>
+                        <h4>编辑设备</h4>
+                        <button type="button" class="edit-close" data-edit-close>&times;</button>
+                    </header>
                     <form method="post" action="/devices/update" data-ajax="true" data-edit-form="devices" data-reset-on-success="false">
                         <?= csrf_field() ?>
                         <label>选择设备
@@ -354,8 +369,11 @@
                         <div class="form-result" data-result></div>
                     </form>
                 </div>
-                <div class="form-card">
-                    <h4>编辑预留</h4>
+                <div class="form-card edit-panel" data-edit-panel="reservations">
+                    <header>
+                        <h4>编辑预留</h4>
+                        <button type="button" class="edit-close" data-edit-close>&times;</button>
+                    </header>
                     <form method="post" action="/reservations/update" data-ajax="true" data-edit-form="reservations" data-reset-on-success="false">
                         <?= csrf_field() ?>
                         <label>选择记录
@@ -440,8 +458,11 @@
                         <div class="form-result" data-result></div>
                     </form>
                 </div>
-                <div class="form-card">
-                    <h4>编辑借用记录</h4>
+                <div class="form-card edit-panel" data-edit-panel="checkouts">
+                    <header>
+                        <h4>编辑借用记录</h4>
+                        <button type="button" class="edit-close" data-edit-close>&times;</button>
+                    </header>
                     <form method="post" action="/checkouts/update" data-ajax="true" data-edit-form="checkouts" data-reset-on-success="false">
                         <?= csrf_field() ?>
                         <label>选择借用
@@ -532,6 +553,7 @@
         <footer>© <?= date('Y') ?> 资产运营平台 · 管理后台</footer>
     </div>
 </div>
+<div class="edit-overlay" data-edit-overlay></div>
 <?php
 $initialDashboard = $session['uid'] ? ($data ?? []) : [];
 $initialDashboardJson = json_encode($initialDashboard, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
@@ -548,6 +570,7 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
     const tabs = document.querySelectorAll('.nav-link, .tab-btn');
     const tabContents = document.querySelectorAll('.tab-content');
     const breadcrumb = document.getElementById('breadcrumb-label');
+    const editOverlay = document.querySelector('[data-edit-overlay]');
     let authState = document.querySelector('.content')?.dataset.loginState || 'guest';
     let dashboardData = {};
     const globalMessage = document.querySelector('[data-global-message]');
@@ -858,6 +881,8 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
     };
 
     const editForms = {};
+    const editPanels = {};
+    let activeEditKey = null;
     const editConfigs = {
         users: {
             dataset: 'users',
@@ -911,6 +936,27 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
                 setFieldValue(form, 'note', item?.note ?? '');
             },
         },
+    };
+
+    const closeEditPanels = () => {
+        activeEditKey = null;
+        Object.values(editPanels).forEach((panel) => panel.classList.remove('show'));
+        if (editOverlay) {
+            editOverlay.classList.remove('show');
+        }
+    };
+
+    const openEditPanel = (key) => {
+        const panel = editPanels[key];
+        if (!panel) {
+            showGlobalMessage('error', '没有可用的编辑窗格');
+            return;
+        }
+        activeEditKey = key;
+        if (editOverlay) {
+            editOverlay.classList.add('show');
+        }
+        panel.classList.add('show');
     };
 
     const deleteConfigs = {
@@ -985,6 +1031,10 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
             return;
         }
         editForms[key] = form;
+        const panel = form.closest('[data-edit-panel]');
+        if (panel) {
+            editPanels[key] = panel;
+        }
         const select = form.querySelector(`[name="${editConfigs[key].selectName}"]`);
         if (select) {
             select.addEventListener('change', () => syncEditForm(key));
@@ -1192,6 +1242,9 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
                 }
                 if (type === 'success') {
                     await refreshStatus();
+                    if (form.dataset.editForm) {
+                        closeEditPanels();
+                    }
                     if (form.dataset.resetOnSuccess !== 'false') {
                         form.reset();
                     }
@@ -1212,6 +1265,17 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
     });
 
     document.addEventListener('click', async (event) => {
+        if (event.target === editOverlay) {
+            closeEditPanels();
+            return;
+        }
+
+        const closeBtn = event.target.closest('[data-edit-close]');
+        if (closeBtn) {
+            event.preventDefault();
+            closeEditPanels();
+            return;
+        }
         const fillBtn = event.target.closest('[data-fill-now]');
         if (fillBtn) {
             event.preventDefault();
@@ -1280,18 +1344,27 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
             }
 
             const select = form.querySelector(`[name="${editConfigs[key].selectName}"]`);
-            if (select && recordId) {
-                const hasOption = Array.from(select.options).some((opt) => opt.value === recordId);
-                if (hasOption) {
-                    select.value = recordId;
+            if (select) {
+                if (recordId) {
+                    const hasOption = Array.from(select.options).some((opt) => opt.value === recordId);
+                    if (hasOption) {
+                        select.value = recordId;
+                    }
+                }
+                if (!select.options.length) {
+                    showGlobalMessage('info', '暂无可编辑的记录');
+                    return;
                 }
             }
 
             syncEditForm(key);
-            const card = form.closest('.form-card') || form;
-            card.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            card.classList.add('highlight');
-            setTimeout(() => card.classList.remove('highlight'), 1200);
+            openEditPanel(key);
+        }
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            closeEditPanels();
         }
     });
 
