@@ -143,6 +143,8 @@ SQL;
             ]);
 
             $pdo->commit();
+
+            DeviceStatusService::refresh($pdo, $deviceId);
         } catch (HttpException $exception) {
             if ($pdo->inTransaction()) {
                 $pdo->rollBack();
