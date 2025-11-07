@@ -24,7 +24,7 @@ final class ReservationController extends Controller
         $reservedFrom = $this->timestampFromPost('from');
         $reservedTo = $this->timestampFromPost('to');
 
-        if ($reservedFrom !== null && $reservedTo !== null && $reservedFrom >= $reservedTo) {
+        if ($reservedFrom >= $reservedTo) {
             throw new HttpException('时间范围不合法', 409);
         }
 

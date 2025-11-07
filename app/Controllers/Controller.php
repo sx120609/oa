@@ -104,7 +104,8 @@ abstract class Controller
             return null;
         }
 
-        $timestamp = strtotime($value);
+        $normalized = str_replace('T', ' ', $value);
+        $timestamp = strtotime($normalized);
         if ($timestamp === false) {
             throw new HttpException(sprintf('字段 %s 不合法', $key), 409);
         }
