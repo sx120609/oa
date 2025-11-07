@@ -13,30 +13,15 @@ Env::load(dirname(__DIR__));
 
 $pdo = DB::connection();
 
-$query = $pdo->query(
-    'SELECT id, user_id, device_id, project_id, due_at,
-            CASE
-                WHEN TIMESTAMPDIFF(HOUR, NOW(), due_at) BETWEEN 20 AND 24 THEN "24h"
-                WHEN TIMESTAMPDIFF(MINUTE, NOW(), due_at) BETWEEN 0 AND 120 THEN "2h"
-            END AS window
+$overdueQuery = $pdo->query(
+    'SELECT id, user_id, device_id, due_at
      FROM checkouts
      WHERE return_at IS NULL
-       AND (
-           TIMESTAMPDIFF(HOUR, NOW(), due_at) BETWEEN 20 AND 24
-           OR TIMESTAMPDIFF(MINUTE, NOW(), due_at) BETWEEN 0 AND 120
-       )'
+       AND due_at < NOW()'
 );
-$rows = [];
-if ($query !== false) {
-    $rows = $query->fetchAll();
-}
-$inserted = 0;
 
-$checkStmt = $pdo->prepare(
-    'SELECT id FROM notifications
-     WHERE user_id = :user_id AND title = :title AND body = :body
-     LIMIT 1'
-);
+$rows = $overdueQuery ? $overdueQuery->fetchAll() : [];
+$inserted = 0;
 
 $insertStmt = $pdo->prepare(
     'INSERT INTO notifications (user_id, title, body, not_before, delivered_at, created_at)
@@ -44,49 +29,28 @@ $insertStmt = $pdo->prepare(
 );
 
 foreach ($rows as $row) {
-    $window = $row['window'] ?? null;
-    if ($window === null) {
-        continue;
-    }
-
-    $checkoutId = (int) $row['id'];
-    $userId = (int) $row['user_id'];
+    $userId = (int) ($row['user_id'] ?? 0);
     if ($userId <= 0) {
         continue;
     }
 
-    $dueAt = (string) $row['due_at'];
+    $checkoutId = (int) $row['id'];
     $deviceId = (int) ($row['device_id'] ?? 0);
+    $dueAt = (string) $row['due_at'];
 
-    $title = '到期提醒';
     $body = sprintf(
-        'Checkout #%d for device %d is due at %s (%s window).',
-        $checkoutId,
+        '设备 %d 借用记录 #%d 已于 %s 到期且尚未归还，请尽快处理。',
         $deviceId,
-        $dueAt,
-        $window
+        $checkoutId,
+        $dueAt
     );
-
-    $checkStmt->execute([
-        ':user_id' => $userId,
-        ':title' => $title,
-        ':body' => $body,
-    ]);
-
-    if ($checkStmt->fetchColumn()) {
-        $checkStmt->closeCursor();
-        continue;
-    }
-    $checkStmt->closeCursor();
 
     $insertStmt->execute([
         ':user_id' => $userId,
-        ':title' => $title,
+        ':title' => '借用超期提醒',
         ':body' => $body,
     ]);
-    $insertStmt->closeCursor();
-
     $inserted++;
 }
 
-printf("Notifications inserted: %d\n", $inserted);
+printf("Overdue notifications inserted: %d\n", $inserted);
