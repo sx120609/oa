@@ -105,6 +105,8 @@ final class ReservationController extends Controller
 
             $pdo->commit();
 
+            DeviceStatusService::refresh($pdo, $deviceId);
+
             AuditLogger::log($actorId, 'reservation', $reservationId, 'update', [
                 'project_id' => $projectId,
                 'device_id' => $deviceId,

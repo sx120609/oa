@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Services\DeviceStatusService;
 use App\Utils\DB;
 use App\Utils\Response;
 use PDO;
@@ -77,8 +78,18 @@ final class DashboardController extends Controller
     /**
      * @return array<int, array<string, mixed>>
      */
+    private function refreshAllDevices(PDO $pdo): void
+    {
+        $ids = $pdo->query('SELECT id FROM devices')->fetchAll(PDO::FETCH_COLUMN);
+        foreach ($ids as $id) {
+            DeviceStatusService::refresh($pdo, (int) $id);
+        }
+    }
+
     private function fetchDevices(PDO $pdo): array
     {
+        $this->refreshAllDevices($pdo);
+
         try {
             $stmt = $pdo->query(
                 'SELECT d.*,
