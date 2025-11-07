@@ -353,8 +353,18 @@
                         <label>设备
                             <select name="device_id" data-select="devices" data-placeholder="请选择设备" required></select>
                         </label>
-                        <label>开始时间<input type="datetime-local" name="from" required></label>
-                        <label>结束时间<input type="datetime-local" name="to" required></label>
+                        <label>开始时间
+                            <div class="input-with-helper">
+                                <input type="datetime-local" name="from" required>
+                                <button type="button" class="fill-now-btn" data-fill-now>当前时间</button>
+                            </div>
+                        </label>
+                        <label>结束时间
+                            <div class="input-with-helper">
+                                <input type="datetime-local" name="to" required>
+                                <button type="button" class="fill-now-btn" data-fill-now>当前时间</button>
+                            </div>
+                        </label>
                         <button type="submit">提交预留</button>
                         <div class="form-result" data-result></div>
                     </form>
@@ -375,8 +385,18 @@
                         <label>设备
                             <select name="device_id" data-select="devices" data-placeholder="请选择设备" required></select>
                         </label>
-                        <label>开始时间<input type="datetime-local" name="from" required></label>
-                        <label>结束时间<input type="datetime-local" name="to" required></label>
+                        <label>开始时间
+                            <div class="input-with-helper">
+                                <input type="datetime-local" name="from" required>
+                                <button type="button" class="fill-now-btn" data-fill-now>当前时间</button>
+                            </div>
+                        </label>
+                        <label>结束时间
+                            <div class="input-with-helper">
+                                <input type="datetime-local" name="to" required>
+                                <button type="button" class="fill-now-btn" data-fill-now>当前时间</button>
+                            </div>
+                        </label>
                         <button type="submit">保存修改</button>
                         <div class="form-result" data-result></div>
                     </form>
@@ -820,9 +840,14 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
         if (!value) {
             return '';
         }
-        const normalized = String(value).replace(/\.\d+/, '').replace('Z', '');
-        const replaced = normalized.includes('T') ? normalized : normalized.replace(' ', 'T');
-        return replaced.slice(0, 16);
+        const text = String(value).trim();
+        if (text.includes('T')) {
+            return text.slice(0, 16);
+        }
+        if (/^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}/.test(text)) {
+            return text.replace(' ', 'T').slice(0, 16);
+        }
+        return text;
     };
 
     const currentLocalDateTime = () => {
