@@ -795,7 +795,26 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
                 </tr>
             `,
             checkouts: (row) => {
-                const returned = Boolean(row.return_at);
+                const now = Date.now();
+                const checkedOutAt = new Date((row.checked_out_at ?? '').replace(' ', 'T'));
+                const dueAt = new Date((row.due_at ?? '').replace(' ', 'T'));
+                const hasReturned = Boolean(row.return_at);
+                let label = '借出中';
+                let chip = 'warning';
+
+                if (hasReturned) {
+                    label = '已归还';
+                    chip = 'success';
+                } else if (checkedOutAt instanceof Date && dueAt instanceof Date) {
+                    if (checkedOutAt.getTime() > now) {
+                        label = '待生效';
+                        chip = '';
+                    } else if (dueAt.getTime() < now) {
+                        label = '已超期';
+                        chip = 'danger';
+                    }
+                }
+
                 return `
                     <tr>
                         <td>${row.id ?? '-'}</td>
@@ -804,7 +823,7 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
                         <td>${formatDate(row.checked_out_at ?? null)}</td>
                         <td>${formatDate(row.due_at ?? null)}</td>
                         <td>${formatDate(row.return_at ?? null)}</td>
-                        <td><span class="status-chip ${returned ? 'success' : 'warning'}">${returned ? '已归还' : '借出中'}</span></td>
+                        <td><span class="status-chip ${chip}">${label}</span></td>
                         <td>
                             <button type="button" class="action-btn edit" data-edit-trigger="checkouts" data-record-id="${row.id ?? ''}">编辑</button>
                             <button type="button" class="action-btn delete" data-delete-record="checkouts" data-record-id="${row.id ?? ''}">删除</button>
