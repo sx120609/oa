@@ -715,8 +715,8 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
                     <tr>
                         <td>${row.id ?? '-'}</td>
                         <td>#${row.device_id ?? '-'}</td>
-                        <td>#${row.from_user_id ?? '-'}</td>
-                        <td>#${row.to_user_id ?? '-'}</td>
+                        <td>${row.from_user_id ? `#${row.from_user_id} ${row.from_user_name ?? ''}` : '-'}</td>
+                        <td>${row.to_user_id ? `#${row.to_user_id} ${row.to_user_name ?? ''}` : '-'}</td>
                         <td>${row.target_project_id ? '#' + row.target_project_id : '-'}</td>
                         <td>${formatDate(row.target_due_at ?? null)}</td>
                         <td>${statusMap[row.status ?? ''] ?? (row.status ?? '-')}</td>
@@ -829,7 +829,11 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
             label: `#${item.id} ${item.device_code ?? ('设备#' + (item.device_id ?? '-'))} → 用户#${item.user_id ?? '-'}`,
             status: item.return_at ? 'closed' : 'open',
         }),
-        transfers: (item) => ({ value: item.id, label: `#${item.id} 设备#${item.device_id} → 用户#${item.to_user_id}`, status: item.status ?? '' }),
+        transfers: (item) => ({
+            value: item.id,
+            label: `#${item.id} 设备#${item.device_id} → #${item.to_user_id} ${item.to_user_name ?? ''}`,
+            status: item.status ?? '',
+        }),
     };
 
     const toLocalDateTimeValue = (value) => {
