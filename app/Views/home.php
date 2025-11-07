@@ -522,7 +522,7 @@
     </div>
 </div>
 <div class="edit-overlay" data-edit-overlay></div>
-<div class="form-card edit-panel" data-return-panel style="display:none;">
+<div class="form-card edit-panel" data-return-panel>
     <header>
         <h4>归还设备</h4>
         <button type="button" class="edit-close" data-edit-close>&times;</button>
@@ -817,7 +817,7 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
                         <td>${formatDate(row.return_at ?? null)}</td>
                         <td><span class="status-chip ${chip}">${label}</span></td>
                         <td>
-                            ${!row.return_at ? `<button type="button" class="action-btn primary" data-return-checkout="${row.id ?? ''}" data-return-device="${row.device_code ?? ('#' + (row.device_id ?? '-'))}">归还</button>` : ''}
+                            ${!row.return_at ? `<button type="button" class="action-btn primary" data-return-checkout="${row.id ?? ''}" data-return-device="${row.device_code ?? ('#' + (row.device_id ?? '-'))}" data-device-id="${row.device_id ?? ''}">归还</button>` : ''}
                             <button type="button" class="action-btn edit" data-edit-trigger="checkouts" data-record-id="${row.id ?? ''}">编辑</button>
                             <button type="button" class="action-btn delete" data-delete-record="checkouts" data-record-id="${row.id ?? ''}">删除</button>
                         </td>
@@ -917,7 +917,6 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
     const returnForm = returnPanel?.querySelector('form[data-return-form]') || null;
     const returnInfo = returnPanel?.querySelector('[data-return-info]') || null;
     let activeEditKey = null;
-    let returnPanelActive = false;
     const editConfigs = {
         users: {
             dataset: 'users',
@@ -978,7 +977,6 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
         Object.values(editPanels).forEach((panel) => panel.classList.remove('show'));
         if (returnPanel) {
             returnPanel.classList.remove('show');
-            returnPanelActive = false;
         }
         if (editOverlay) {
             editOverlay.classList.remove('show');
@@ -1003,7 +1001,6 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
             showGlobalMessage('error', '无法打开归还窗口');
             return;
         }
-        returnPanelActive = true;
         if (editOverlay) {
             editOverlay.classList.add('show');
         }

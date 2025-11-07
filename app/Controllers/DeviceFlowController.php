@@ -688,6 +688,11 @@ SQL;
                 throw new HttpException('借用记录不存在', 404);
             }
 
+            $deviceId = (int) ($checkout['device_id'] ?? 0);
+            if ($deviceId <= 0) {
+                throw new HttpException('借用记录缺少设备信息', 500);
+            }
+
             $newProjectId = $projectId ?? ($checkout['project_id'] ? (int) $checkout['project_id'] : null);
             $newUserId = $userId ?? (int) $checkout['user_id'];
 
@@ -722,6 +727,7 @@ SQL;
                     ':status' => 'in_stock',
                     ':device_id' => $deviceId,
                 ]);
+                DeviceStatusService::refresh($pdo, $deviceId);
             }
 
             $pdo->commit();
