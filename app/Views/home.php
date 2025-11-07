@@ -853,9 +853,7 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
     const currentLocalDateTime = () => {
         const now = new Date();
         now.setSeconds(0, 0);
-        const offsetMs = now.getTimezoneOffset() * 60000;
-        const local = new Date(now.getTime() - offsetMs);
-        return local.toISOString().slice(0, 16);
+        return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}T${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
     };
 
     const setSelectValue = (select, value) => {
