@@ -58,19 +58,8 @@ SQL;
 
         $projectId = $this->requirePositiveInt('project_id');
         $deviceId = $this->requirePositiveInt('device_id');
-        $fromInput = $_POST['from'] ?? null;
-        $toInput = $_POST['to'] ?? null;
-
-        if ($fromInput === null || $toInput === null) {
-            throw new HttpException('缺少预留时间', 409);
-        }
-
-        $reservedFrom = strtotime(str_replace('T', ' ', (string) $fromInput));
-        $reservedTo = strtotime(str_replace('T', ' ', (string) $toInput));
-
-        if ($reservedFrom === false || $reservedTo === false) {
-            throw new HttpException('时间格式不正确', 409);
-        }
+        $reservedFrom = $this->timestampFromPost('from');
+        $reservedTo = $this->timestampFromPost('to');
 
         if ($reservedFrom >= $reservedTo) {
             throw new HttpException('时间范围不合法', 409);
