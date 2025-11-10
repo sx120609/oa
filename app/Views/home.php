@@ -14,8 +14,11 @@
             --sidebar: rgba(17,25,40,0.88);
             --sidebar-active: #4fa5ff;
             --sidebar-text: #f8fafc;
-            --content-bg: rgba(15,23,42,0.65);
+            --content-bg: rgba(10,15,28,0.78);
             --panel-bg: rgba(19,27,50,0.9);
+            --surface-soft: rgba(255,255,255,0.02);
+            --table-head-bg: rgba(255,255,255,0.06);
+            --input-bg: rgba(15,23,42,0.6);
             --border: rgba(255,255,255,0.08);
             --text: #e2e8f0;
             --muted: #94a3b8;
@@ -24,15 +27,19 @@
             --danger: #fb7185;
             --success: #34d399;
             --warning: #fbbf24;
+            --shadow-soft: 0 10px 22px rgba(15, 23, 42, 0.35);
         }
         body.theme-light {
             color-scheme: light;
-            --bg: #f4f6fb;
-            --sidebar: #ffffff;
+            --bg: linear-gradient(180deg,#ffffff,#e5ecff);
+            --sidebar: #fefefe;
             --sidebar-active: #2563eb;
             --sidebar-text: #0f172a;
             --content-bg: #ffffff;
             --panel-bg: #ffffff;
+            --surface-soft: #f9fafb;
+            --table-head-bg: #f3f4f6;
+            --input-bg: #ffffff;
             --border: #e2e8f0;
             --text: #111827;
             --muted: #64748b;
@@ -41,14 +48,15 @@
             --danger: #ef4444;
             --success: #16a34a;
             --warning: #f59e0b;
+            --shadow-soft: 0 10px 22px rgba(15, 23, 42, 0.08);
         }
         * { box-sizing: border-box; }
         body { margin: 0; min-height: 100vh; font-family: "Inter", "PingFang SC", "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); position: relative; transition: background 0.3s ease; }
         body::after { content: ""; position: fixed; inset: 0; pointer-events: none; background-image: radial-gradient(#fff5 1px, transparent 1px); background-size: 3px 3px; opacity: 0.08; }
         .app { display: flex; min-height: 100vh; position: relative; z-index: 1; }
-        .sidebar { width: 240px; background: rgba(17, 25, 40, 0.88); backdrop-filter: blur(6px); color: var(--sidebar-text); display: flex; flex-direction: column; padding: 1.5rem 1rem; gap: 1.5rem; border-right: 1px solid rgba(255,255,255,0.06); }
+        .sidebar { width: 240px; background: var(--sidebar); backdrop-filter: blur(12px); color: var(--sidebar-text); display: flex; flex-direction: column; padding: 1.5rem 1rem; gap: 1.5rem; border-right: 1px solid var(--border); box-shadow: 6px 0 24px rgba(0,0,0,0.25); }
         .sidebar .logo { font-size: 1.3rem; font-weight: 700; letter-spacing: 0.06em; text-align: center; }
-        .sidebar-search { display: flex; gap: 0.4rem; align-items: center; background: rgba(255,255,255,0.04); border-radius: 0.8rem; padding: 0.35rem 0.6rem; }
+        .sidebar-search { display: flex; gap: 0.4rem; align-items: center; background: var(--surface-soft); border-radius: 0.8rem; padding: 0.35rem 0.6rem; }
         .sidebar-search svg { opacity: 0.6; }
         .sidebar-search input { flex: 1; background: transparent; border: none; color: inherit; font-size: 0.9rem; outline: none; }
         .nav-group { display: flex; flex-direction: column; gap: 0.4rem; }
@@ -82,7 +90,8 @@
         .stat-card strong { font-size: 1.8rem; }
         .section-title { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-bottom: 1.4rem; }
         .section-title h2 { margin: 0; font-size: 1.3rem; letter-spacing: 0.04em; }
-        .badge { background: rgba(148, 163, 184, 0.18); color: var(--text); padding: 0.3rem 0.85rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600; }
+        .badge { background: var(--surface-soft); color: var(--text); padding: 0.3rem 0.85rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600; }
+        .top-actions [data-theme-toggle] { width: 40px; height: 40px; padding: 0; font-size: 1.1rem; display: inline-flex; align-items: center; justify-content: center; }
         .data-table-wrapper { border-radius: 16px; overflow: hidden; border: 1px solid var(--border); }
         .data-table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
         .data-table th, .data-table td { padding: 0.65rem 0.9rem; border-bottom: 1px solid var(--border); text-align: left; }
@@ -92,7 +101,7 @@
         .form-card.highlight { box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.18); }
         .form-card h4 { margin: 0; font-size: 1rem; }
         .form-card label { display: grid; gap: 0.35rem; font-size: 0.9rem; }
-.form-card input, .form-card textarea, .form-card select { border: 1px solid var(--border); border-radius: 0.7rem; padding: 0.55rem 0.7rem; font-size: 0.95rem; background: rgba(15,23,42,0.6); color: var(--text); }
+.form-card input, .form-card textarea, .form-card select { border: 1px solid var(--border); border-radius: 0.7rem; padding: 0.55rem 0.7rem; font-size: 0.95rem; background: var(--input-bg); color: var(--text); }
         .input-with-helper { display: flex; align-items: center; gap: 0.6rem; }
         .input-with-helper input { flex: 1 1 auto; }
         .fill-now-btn { border: none; background: rgba(37, 99, 235, 0.12); color: var(--primary); border-radius: 0.6rem; padding: 0.4rem 0.8rem; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: background 0.15s ease, color 0.15s ease; }
@@ -156,7 +165,7 @@
             </div>
             <div class="top-actions">
                 <button type="button" onclick="window.dashboardRefresh && window.dashboardRefresh()">刷新数据</button>
-                <button type="button" data-theme-toggle>切换日间</button>
+                <button type="button" data-theme-toggle aria-label="切换主题">☀</button>
                 <div class="login-card" data-auth-visible="guest" style="display:none;">
                     <form method="post" action="/login" data-ajax="true">
                         <?= csrf_field() ?>
@@ -594,14 +603,15 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
     const themeToggle = document.querySelector('[data-theme-toggle]');
 
     const applyTheme = (theme) => {
-        if (theme === 'light') {
+        const nextTheme = theme === 'light' ? 'light' : 'dark';
+        if (nextTheme === 'light') {
             document.body.classList.add('theme-light');
-            themeToggle && (themeToggle.textContent = '切换夜间');
+            if (themeToggle) themeToggle.textContent = '🌙';
         } else {
             document.body.classList.remove('theme-light');
-            themeToggle && (themeToggle.textContent = '切换日间');
+            if (themeToggle) themeToggle.textContent = '☀';
         }
-        localStorage.setItem('theme', theme);
+        localStorage.setItem('theme', nextTheme);
     };
 
     applyTheme(localStorage.getItem('theme') === 'light' ? 'light' : 'dark');
