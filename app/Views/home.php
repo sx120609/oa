@@ -1084,6 +1084,15 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
         returnPanel.classList.add('show');
     };
 
+    if (editOverlay) {
+        editOverlay.addEventListener('click', (event) => {
+            if (event.target === editOverlay) {
+                event.preventDefault();
+                closeEditPanels();
+            }
+        });
+    }
+
     const deleteConfigs = {
         users: { url: '/users/delete', idField: 'user_id', confirm: '确认删除该用户？' },
         projects: { url: '/projects/delete', idField: 'project_id', confirm: '确认删除该项目？相关记录可能会被清理。' },
@@ -1409,11 +1418,6 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
     });
 
     document.addEventListener('click', async (event) => {
-        if (event.target === editOverlay) {
-            closeEditPanels();
-            return;
-        }
-
         const closeBtn = event.target.closest('[data-edit-close]');
         if (closeBtn) {
             event.preventDefault();
