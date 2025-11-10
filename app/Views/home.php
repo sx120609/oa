@@ -110,6 +110,7 @@
         .form-card h4 { margin: 0; font-size: 1rem; }
         .form-card label { display: grid; gap: 0.35rem; font-size: 0.9rem; }
 .form-card input, .form-card textarea, .form-card select { border: 1px solid var(--border); border-radius: 0.7rem; padding: 0.55rem 0.7rem; font-size: 0.95rem; background: var(--input-bg); color: var(--text); }
+        .form-hint { font-size: 0.85rem; color: var(--muted); margin: 0 0 0.75rem; line-height: 1.4; }
         .input-with-helper { display: flex; align-items: center; gap: 0.6rem; }
         .input-with-helper input { flex: 1 1 auto; }
         .fill-now-btn { border: none; background: rgba(37, 99, 235, 0.12); color: var(--primary); border-radius: 0.6rem; padding: 0.4rem 0.8rem; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: background 0.15s ease, color 0.15s ease; }
@@ -253,9 +254,8 @@
                     </header>
                     <form method="post" action="/users/update" data-ajax="true" data-edit-form="users" data-reset-on-success="false">
                         <?= csrf_field() ?>
-                        <label>选择用户
-                            <select name="user_id" data-select="users" data-placeholder="请选择用户" required></select>
-                        </label>
+                        <input type="hidden" name="user_id">
+                        <p class="form-hint" data-edit-title="users">请在列表中点击“编辑”来加载用户信息。</p>
                         <label>姓名<input type="text" name="name" required></label>
                         <label>角色
                             <select name="role" required>
@@ -310,9 +310,8 @@
                     </header>
                     <form method="post" action="/projects/update" data-ajax="true" data-edit-form="projects" data-reset-on-success="false">
                         <?= csrf_field() ?>
-                        <label>选择项目
-                            <select name="project_id" data-select="projects" data-placeholder="请选择项目" required></select>
-                        </label>
+                        <input type="hidden" name="project_id">
+                        <p class="form-hint" data-edit-title="projects">请先在列表中选择要编辑的项目。</p>
                         <label>项目名称<input type="text" name="name" required></label>
                         <label>项目地点<input type="text" name="location" required></label>
                         <label>项目状态
@@ -365,9 +364,8 @@
                     </header>
                     <form method="post" action="/devices/update" data-ajax="true" data-edit-form="devices" data-reset-on-success="false">
                         <?= csrf_field() ?>
-                        <label>选择设备
-                            <select name="device_id" data-select="devices" data-placeholder="请选择设备" required></select>
-                        </label>
+                        <input type="hidden" name="device_id">
+                        <p class="form-hint" data-edit-title="devices">请选择一条设备记录后开启编辑。</p>
                         <label>设备型号<input type="text" name="model" required></label>
                         <label>设备状态
                             <select name="status" required>
@@ -425,9 +423,8 @@
                     </header>
                     <form method="post" action="/reservations/update" data-ajax="true" data-edit-form="reservations" data-reset-on-success="false">
                         <?= csrf_field() ?>
-                        <label>选择记录
-                            <select name="reservation_id" data-select="reservations" data-placeholder="请选择预留记录" required></select>
-                        </label>
+                        <input type="hidden" name="reservation_id">
+                        <p class="form-hint" data-edit-title="reservations">点击表格中的“编辑”以加载预留记录。</p>
                         <label>项目
                             <select name="project_id" data-select="projects" data-placeholder="请选择项目" required></select>
                         </label>
@@ -495,9 +492,8 @@
                     </header>
                     <form method="post" action="/checkouts/update" data-ajax="true" data-edit-form="checkouts" data-reset-on-success="false">
                         <?= csrf_field() ?>
-                        <label>选择借用
-                            <select name="checkout_id" data-select="checkouts" data-placeholder="请选择借用记录" required></select>
-                        </label>
+                        <input type="hidden" name="checkout_id">
+                        <p class="form-hint" data-edit-title="checkouts">在借用列表里点击“编辑”进入此面板。</p>
                         <label>借用用户
                             <select name="user_id" data-select="users" data-placeholder="请选择用户" required></select>
                         </label>
@@ -990,23 +986,28 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
 
     const editForms = {};
     const editPanels = {};
+    const editTitles = {};
     const returnPanel = document.querySelector('[data-return-panel]');
     const returnForm = returnPanel?.querySelector('form[data-return-form]') || null;
     const returnInfo = returnPanel?.querySelector('[data-return-info]') || null;
     let activeEditKey = null;
+    let activeEditRecordId = null;
+
     const editConfigs = {
         users: {
             dataset: 'users',
-            selectName: 'user_id',
+            title: (item) => `用户 #${item.id ?? ''} · ${item.name ?? ''}`,
             fill: (item, form) => {
+                setFieldValue(form, 'user_id', item?.id ?? '');
                 setFieldValue(form, 'name', item?.name ?? '');
                 setFieldValue(form, 'role', item?.role ?? 'owner');
             },
         },
         projects: {
             dataset: 'projects',
-            selectName: 'project_id',
+            title: (item) => `项目 #${item.id ?? ''} · ${item.name ?? ''}`,
             fill: (item, form) => {
+                setFieldValue(form, 'project_id', item?.id ?? '');
                 setFieldValue(form, 'name', item?.name ?? '');
                 setFieldValue(form, 'location', item?.location ?? '');
                 setFieldValue(form, 'status', item?.status ?? 'ongoing');
@@ -1019,8 +1020,9 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
         },
         devices: {
             dataset: 'devices',
-            selectName: 'device_id',
+            title: (item) => `设备 #${item.id ?? ''} · ${item.code ?? ''}`,
             fill: (item, form) => {
+                setFieldValue(form, 'device_id', item?.id ?? '');
                 setFieldValue(form, 'model', item?.model ?? '');
                 setFieldValue(form, 'status', item?.status ?? 'in_stock');
                 setFieldValue(form, 'serial', item?.serial ?? '');
@@ -1029,8 +1031,9 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
         },
         reservations: {
             dataset: 'reservations',
-            selectName: 'reservation_id',
+            title: (item) => `预留 #${item.id ?? ''} · ${item.device_code ?? '设备'}`,
             fill: (item, form) => {
+                setFieldValue(form, 'reservation_id', item?.id ?? '');
                 setFieldValue(form, 'project_id', item?.project_id ?? '');
                 setFieldValue(form, 'device_id', item?.device_id ?? '');
                 setFieldValue(form, 'from', toLocalDateTimeValue(item?.reserved_from ?? ''));
@@ -1039,22 +1042,30 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
         },
         checkouts: {
             dataset: 'checkouts',
-            selectName: 'checkout_id',
+            title: (item) => `借用 #${item.id ?? ''} · 设备#${item.device_id ?? ''}`,
             fill: (item, form) => {
+                setFieldValue(form, 'checkout_id', item?.id ?? '');
                 setFieldValue(form, 'user_id', item?.user_id ?? '');
                 setFieldValue(form, 'project_id', item?.project_id ?? '');
                 setFieldValue(form, 'due', toLocalDateTimeValue(item?.due_at ?? ''));
+                setFieldValue(form, 'return_at', toLocalDateTimeValue(item?.return_at ?? ''));
+                setFieldValue(form, 'photo', item?.return_photo ?? '');
                 setFieldValue(form, 'note', item?.note ?? '');
             },
         },
     };
 
-    const closeEditPanels = () => {
-        activeEditKey = null;
+    const hideFloatingPanels = () => {
         Object.values(editPanels).forEach((panel) => panel.classList.remove('show'));
         if (returnPanel) {
             returnPanel.classList.remove('show');
         }
+    };
+
+    const closeEditPanels = () => {
+        hideFloatingPanels();
+        activeEditKey = null;
+        activeEditRecordId = null;
         if (editOverlay) {
             editOverlay.classList.remove('show');
         }
@@ -1066,7 +1077,7 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
             showGlobalMessage('error', '没有可用的编辑窗格');
             return;
         }
-        activeEditKey = key;
+        hideFloatingPanels();
         if (editOverlay) {
             editOverlay.classList.add('show');
         }
@@ -1078,6 +1089,9 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
             showGlobalMessage('error', '无法打开归还窗口');
             return;
         }
+        hideFloatingPanels();
+        activeEditKey = null;
+        activeEditRecordId = null;
         if (editOverlay) {
             editOverlay.classList.add('show');
         }
@@ -1103,60 +1117,27 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
         notifications: { url: '/notifications/delete', idField: 'notification_id', confirm: '确认删除该通知？' },
     };
 
-    const syncEditForm = (key) => {
+    const applyEditRecord = (key, recordId) => {
         const config = editConfigs[key];
         const form = editForms[key];
         if (!config || !form) {
-            return;
+            return false;
         }
-
-        const select = form.querySelector(`[name="${config.selectName}"]`);
-        if (!select) {
-            return;
-        }
-
         const dataset = dashboardData[config.dataset] ?? [];
-        const hasData = dataset.length > 0;
-        const idField = config.idField ?? 'id';
-        const matchesSelection = (item, value) => String(item?.[idField] ?? '') === String(value ?? '');
-
-        form.querySelectorAll('input, select, textarea, button').forEach((field) => {
-            if (field.name === '_token') {
-                return;
-            }
-            if (field.matches(`[name="${config.selectName}"]`)) {
-                field.disabled = !hasData;
-            } else if (field.tagName === 'BUTTON') {
-                field.disabled = !hasData;
-            } else {
-                field.disabled = !hasData;
-            }
-        });
-
-        if (!hasData) {
+        const matcher = config.match ?? ((item, value) => String(item?.id ?? '') === String(value ?? ''));
+        const record = dataset.find((item) => matcher(item, recordId));
+        if (!record) {
             config.fill(null, form);
-            if (select.options.length > 0) {
-                select.selectedIndex = 0;
-            } else {
-                select.value = '';
+            if (editTitles[key]) {
+                editTitles[key].textContent = '未找到对应记录，建议刷新数据后重试。';
             }
-            return;
+            return false;
         }
-
-        if (select.value && !dataset.some((item) => matchesSelection(item, select.value))) {
-            select.value = '';
+        config.fill(record, form);
+        if (editTitles[key]) {
+            editTitles[key].textContent = config.title ? config.title(record) : `#${record.id ?? recordId}`;
         }
-
-        if (!select.value && select.options.length > 0) {
-            select.value = select.options[0].value;
-        }
-
-        const current = dataset.find((item) => matchesSelection(item, select.value)) ?? null;
-        config.fill(current, form);
-    };
-
-    const syncEditForms = () => {
-        Object.keys(editForms).forEach((key) => syncEditForm(key));
+        return true;
     };
 
     document.querySelectorAll('[data-edit-form]').forEach((form) => {
@@ -1168,12 +1149,12 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
         const panel = form.closest('[data-edit-panel]');
         if (panel) {
             editPanels[key] = panel;
+            const titleEl = panel.querySelector(`[data-edit-title="${key}"]`);
+            if (titleEl) {
+                editTitles[key] = titleEl;
+            }
         }
-        const select = form.querySelector(`[name="${editConfigs[key].selectName}"]`);
-        if (select) {
-            select.addEventListener('change', () => syncEditForm(key));
-        }
-        syncEditForm(key);
+        editConfigs[key].fill(null, form);
     });
 
     const populateSelects = (data) => {
@@ -1242,7 +1223,9 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
         renderTable('transfers', data.transfers ?? []);
         renderTable('notifications', data.notifications ?? []);
         populateSelects(data);
-        syncEditForms();
+        if (activeEditKey && activeEditRecordId) {
+            applyEditRecord(activeEditKey, activeEditRecordId);
+        }
     };
 
     const loadDashboardData = async () => {
@@ -1495,35 +1478,21 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
             const key = editBtn.getAttribute('data-edit-trigger');
             const recordId = editBtn.getAttribute('data-record-id') ?? '';
             if (!key || !editConfigs[key]) {
+                showGlobalMessage('error', '暂不支持编辑该类型的数据');
                 return;
             }
-
-            const tabButton = document.querySelector(`.tab-btn[data-tab="${key}"]`);
-            if (tabButton) {
-                tabButton.click();
-            }
-
-            const form = editForms[key];
-            if (!form) {
+            if (!recordId) {
+                showGlobalMessage('error', '缺少记录编号');
                 return;
             }
-
-            const select = form.querySelector(`[name="${editConfigs[key].selectName}"]`);
-            if (select) {
-                if (recordId) {
-                    const hasOption = Array.from(select.options).some((opt) => opt.value === recordId);
-                    if (hasOption) {
-                        select.value = recordId;
-                    }
-                }
-                if (!select.options.length) {
-                    showGlobalMessage('info', '暂无可编辑的记录');
-                    return;
-                }
+            if (!applyEditRecord(key, recordId)) {
+                showGlobalMessage('error', '未能加载该记录，请刷新后重试');
+                return;
             }
-
-            syncEditForm(key);
+            activeEditKey = key;
+            activeEditRecordId = recordId;
             openEditPanel(key);
+            return;
         }
 
         if (event.target.closest('[data-refresh-trigger]')) {
