@@ -142,10 +142,6 @@ SQL;
                 ':device_id' => $deviceId,
             ]);
 
-            if ($returnAt) {
-                DeviceStatusService::refresh($pdo, $deviceId);
-            }
-
             $pdo->commit();
 
             DeviceStatusService::refresh($pdo, $deviceId);
