@@ -114,9 +114,9 @@
         .input-with-helper input { flex: 1 1 auto; }
         .fill-now-btn { border: none; background: rgba(37, 99, 235, 0.12); color: var(--primary); border-radius: 0.6rem; padding: 0.4rem 0.8rem; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: background 0.15s ease, color 0.15s ease; }
         .fill-now-btn:hover { background: rgba(37, 99, 235, 0.18); color: #1d4ed8; }
-        .edit-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.45); backdrop-filter: blur(4px); z-index: 1000; display: none; pointer-events: none; }
+        .edit-overlay { position: fixed; inset: 0; background: rgba(11, 16, 28, 0.35); backdrop-filter: blur(2px); z-index: 1000; display: none; cursor: pointer; }
         .edit-overlay.show { display: block; }
-        .edit-panel { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: min(520px, 92%); max-height: 90vh; overflow-y: auto; z-index: 1001; margin: 0; box-shadow: 0 15px 40px rgba(15, 23, 42, 0.25); }
+        .edit-panel { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: min(520px, 92%); max-height: 90vh; overflow-y: auto; z-index: 1100; margin: 0; box-shadow: 0 15px 40px rgba(15, 23, 42, 0.25); }
         .edit-panel.show { display: block; }
         .edit-panel header { display: flex; align-items: center; justify-content: space-between; margin: -0.4rem -0.4rem 0.8rem; padding: 0 0.4rem; }
         .edit-close { border: none; background: transparent; font-size: 1.3rem; padding: 0.25rem; cursor: pointer; color: var(--muted); }
