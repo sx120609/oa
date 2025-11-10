@@ -32,7 +32,7 @@
             --nav-active-bg: rgba(79,165,255,0.25);
             --nav-active-color: #f8fafc;
         }
-        body.theme-light {
+body.theme-light {
             color-scheme: light;
             --bg: linear-gradient(180deg,#ffffff,#e5ecff);
             --sidebar: #fefefe;
@@ -55,6 +55,18 @@
             --nav-hover-bg: rgba(37,99,235,0.08);
             --nav-active-bg: rgba(37,99,235,0.18);
             --nav-active-color: #1e3a8a;
+        }
+
+        body.theme-light .edit-overlay {
+            background: rgba(15, 23, 42, 0.2);
+            backdrop-filter: blur(4px);
+        }
+
+        body.theme-light .edit-panel {
+            background: rgba(255,255,255,0.95);
+            color: #111827;
+            border-color: rgba(148, 163, 184, 0.35);
+            box-shadow: 0 25px 60px rgba(15, 23, 42, 0.18);
         }
         * { box-sizing: border-box; }
         body { margin: 0; min-height: 100vh; font-family: "Inter", "PingFang SC", "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); position: relative; transition: background 0.3s ease; }
