@@ -28,6 +28,9 @@
             --success: #34d399;
             --warning: #fbbf24;
             --shadow-soft: 0 10px 22px rgba(15, 23, 42, 0.35);
+            --nav-hover-bg: rgba(255,255,255,0.08);
+            --nav-active-bg: rgba(79,165,255,0.25);
+            --nav-active-color: #f8fafc;
         }
         body.theme-light {
             color-scheme: light;
@@ -49,6 +52,9 @@
             --success: #16a34a;
             --warning: #f59e0b;
             --shadow-soft: 0 10px 22px rgba(15, 23, 42, 0.08);
+            --nav-hover-bg: rgba(37,99,235,0.08);
+            --nav-active-bg: rgba(37,99,235,0.18);
+            --nav-active-color: #1e3a8a;
         }
         * { box-sizing: border-box; }
         body { margin: 0; min-height: 100vh; font-family: "Inter", "PingFang SC", "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); position: relative; transition: background 0.3s ease; }
@@ -62,8 +68,8 @@
         .nav-group { display: flex; flex-direction: column; gap: 0.4rem; }
         .nav-title { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(229, 231, 235, 0.65); margin-bottom: 0.2rem; padding: 0 0.75rem; }
         .nav-link { appearance: none; border: none; background: transparent; color: inherit; display: flex; align-items: center; justify-content: space-between; width: 100%; font-size: 0.95rem; padding: 0.7rem 0.9rem; border-radius: 0.75rem; cursor: pointer; transition: background 0.18s ease, color 0.18s ease; }
-        .nav-link:hover { background: rgba(255, 255, 255, 0.08); }
-        .nav-link.active { background: rgba(59, 130, 246, 0.18); color: #ffffff; }
+        .nav-link:hover { background: var(--nav-hover-bg); }
+        .nav-link.active { background: var(--nav-active-bg); color: var(--nav-active-color); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08); }
 .content { flex: 1; display: flex; flex-direction: column; padding: 0 2.5rem 2.5rem; background: var(--content-bg); }
         .content[data-login-state="guest"] .tabs-container,
         .content[data-login-state="guest"] .tabs-header,
