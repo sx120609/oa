@@ -78,7 +78,9 @@
         .breadcrumb { display: flex; align-items: center; gap: 0.65rem; font-size: 0.95rem; color: var(--muted); }
         .top-actions { display: flex; align-items: center; gap: 1rem; }
         .top-actions button { background: var(--primary); color: #fff; border: none; border-radius: 0.75rem; padding: 0.55rem 1.1rem; font-weight: 600; cursor: pointer; transition: transform 0.15s ease, box-shadow 0.15s ease; }
+        .top-actions button.logout-btn { background: var(--danger); }
         .top-actions button:hover { transform: translateY(-1px); box-shadow: 0 12px 20px rgba(37, 99, 235, 0.2); }
+        .top-actions form { margin: 0; display: inline-flex; }
 .login-card { background: var(--panel-bg); border: 1px solid var(--border); border-radius: 1rem; padding: 1rem 1.2rem; box-shadow: 0 10px 22px rgba(15, 23, 42, 0.25); display: flex; align-items: center; gap: 0.8rem; }
         .login-card form { display: flex; align-items: center; gap: 0.6rem; }
 .login-card input { border: 1px solid var(--border); border-radius: 0.6rem; padding: 0.45rem 0.6rem; font-size: 0.9rem; background: rgba(15,23,42,0.6); color: var(--text); }
@@ -170,8 +172,12 @@
                 <strong id="breadcrumb-label">数据概览</strong>
             </div>
             <div class="top-actions">
-                <button type="button" onclick="window.dashboardRefresh && window.dashboardRefresh()">刷新数据</button>
+                <button type="button" data-refresh-trigger>刷新数据</button>
                 <button type="button" data-theme-toggle aria-label="切换主题">☀</button>
+                <form method="post" action="/logout" data-ajax="true" data-logout-form="true" data-auth-visible="authenticated" style="display:none;">
+                    <?= csrf_field() ?>
+                    <button type="submit" class="logout-btn">退出</button>
+                </form>
                 <div class="login-card" data-auth-visible="guest" style="display:none;">
                     <form method="post" action="/login" data-ajax="true">
                         <?= csrf_field() ?>
@@ -1367,6 +1373,10 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
                     showGlobalMessage('info', message);
                 }
                 if (type === 'success') {
+                    if (form.dataset.logoutForm !== undefined) {
+                        window.location.href = '/';
+                        return;
+                    }
                     await refreshStatus();
                     if (form.dataset.editForm || form === returnForm) {
                         closeEditPanels();
@@ -1402,6 +1412,23 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
             closeEditPanels();
             return;
         }
+        const refreshBtn = event.target.closest('[data-refresh-trigger]');
+        if (refreshBtn) {
+            event.preventDefault();
+            if (refreshBtn.disabled) {
+                return;
+            }
+            refreshBtn.disabled = true;
+            refreshBtn.dataset.originalText = refreshBtn.dataset.originalText || refreshBtn.textContent;
+            refreshBtn.textContent = '刷新中...';
+            (window.dashboardRefresh ? window.dashboardRefresh(true) : Promise.resolve())
+                .finally(() => {
+                    refreshBtn.disabled = false;
+                    refreshBtn.textContent = refreshBtn.dataset.originalText || '刷新数据';
+                });
+            return;
+        }
+
         const fillBtn = event.target.closest('[data-fill-now]');
         if (fillBtn) {
             event.preventDefault();
@@ -1487,6 +1514,12 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
             openEditPanel(key);
         }
 
+        if (event.target.closest('[data-refresh-trigger]')) {
+            event.preventDefault();
+            window.dashboardRefresh && window.dashboardRefresh(true);
+            return;
+        }
+
         const confirmBtn = event.target.closest('[data-confirm-transfer]');
         if (confirmBtn) {
             event.preventDefault();
@@ -1552,7 +1585,13 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
         }
     });
 
-    window.dashboardRefresh = refreshStatus;
+    window.dashboardRefresh = (showToast = false) => {
+        return refreshStatus().then(() => {
+            if (showToast) {
+                showGlobalMessage('info', '数据已刷新');
+            }
+        });
+    };
     if (authState === 'authenticated') {
         loadDashboardData();
     }

@@ -46,6 +46,7 @@ $router = new Router();
 
 $router->get('/', 'HomeController@index');
 $router->post('/login', 'AuthController@login');
+$router->post('/logout', 'AuthController@logout');
 $router->post('/projects/create', 'ProjectController@create');
 $router->post('/devices/create', 'DeviceController@create');
 $router->post('/reservations/create', 'DeviceFlowController@reserve');
