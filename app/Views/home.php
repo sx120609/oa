@@ -9,24 +9,42 @@
     <title>资产管理控制台</title>
     <style>
         :root {
+            color-scheme: dark;
+            --bg: radial-gradient(circle at top, #1f2a44, #0c1224);
+            --sidebar: rgba(17,25,40,0.88);
+            --sidebar-active: #4fa5ff;
+            --sidebar-text: #f8fafc;
+            --content-bg: rgba(15,23,42,0.65);
+            --panel-bg: rgba(19,27,50,0.9);
+            --border: rgba(255,255,255,0.08);
+            --text: #e2e8f0;
+            --muted: #94a3b8;
+            --primary: #4fa5ff;
+            --primary-light: rgba(79,165,255,0.18);
+            --danger: #fb7185;
+            --success: #34d399;
+            --warning: #fbbf24;
+        }
+        body.theme-light {
             color-scheme: light;
-            --bg: #f3f6fb;
-            --sidebar: #1f2937;
+            --bg: #f4f6fb;
+            --sidebar: #ffffff;
             --sidebar-active: #2563eb;
-            --sidebar-text: #e5e7eb;
+            --sidebar-text: #0f172a;
             --content-bg: #ffffff;
+            --panel-bg: #ffffff;
             --border: #e2e8f0;
             --text: #111827;
-            --muted: #6b7280;
+            --muted: #64748b;
             --primary: #2563eb;
-            --primary-light: #e0ecff;
+            --primary-light: rgba(37,99,235,0.12);
             --danger: #ef4444;
             --success: #16a34a;
             --warning: #f59e0b;
         }
         * { box-sizing: border-box; }
-        body { margin: 0; min-height: 100vh; font-family: "Inter", "PingFang SC", "Microsoft YaHei", sans-serif; background: radial-gradient(circle at top, #1f2a44, #0c1224); color: var(--text); position: relative; }
-        body::after { content: ""; position: fixed; inset: 0; pointer-events: none; background-image: radial-gradient(#fff5 1px, transparent 1px); background-size: 3px 3px; opacity: 0.1; }
+        body { margin: 0; min-height: 100vh; font-family: "Inter", "PingFang SC", "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); position: relative; transition: background 0.3s ease; }
+        body::after { content: ""; position: fixed; inset: 0; pointer-events: none; background-image: radial-gradient(#fff5 1px, transparent 1px); background-size: 3px 3px; opacity: 0.08; }
         .app { display: flex; min-height: 100vh; position: relative; z-index: 1; }
         .sidebar { width: 240px; background: rgba(17, 25, 40, 0.88); backdrop-filter: blur(6px); color: var(--sidebar-text); display: flex; flex-direction: column; padding: 1.5rem 1rem; gap: 1.5rem; border-right: 1px solid rgba(255,255,255,0.06); }
         .sidebar .logo { font-size: 1.3rem; font-weight: 700; letter-spacing: 0.06em; text-align: center; }
@@ -38,7 +56,7 @@
         .nav-link { appearance: none; border: none; background: transparent; color: inherit; display: flex; align-items: center; justify-content: space-between; width: 100%; font-size: 0.95rem; padding: 0.7rem 0.9rem; border-radius: 0.75rem; cursor: pointer; transition: background 0.18s ease, color 0.18s ease; }
         .nav-link:hover { background: rgba(255, 255, 255, 0.08); }
         .nav-link.active { background: rgba(59, 130, 246, 0.18); color: #ffffff; }
-        .content { flex: 1; display: flex; flex-direction: column; padding: 0 2.5rem 2.5rem; }
+.content { flex: 1; display: flex; flex-direction: column; padding: 0 2.5rem 2.5rem; background: var(--content-bg); }
         .content[data-login-state="guest"] .tabs-container,
         .content[data-login-state="guest"] .tabs-header,
         .content[data-login-state="guest"] .tab-content { display: none !important; }
@@ -47,19 +65,19 @@
         .top-actions { display: flex; align-items: center; gap: 1rem; }
         .top-actions button { background: var(--primary); color: #fff; border: none; border-radius: 0.75rem; padding: 0.55rem 1.1rem; font-weight: 600; cursor: pointer; transition: transform 0.15s ease, box-shadow 0.15s ease; }
         .top-actions button:hover { transform: translateY(-1px); box-shadow: 0 12px 20px rgba(37, 99, 235, 0.2); }
-        .login-card { background: #ffffff; border: 1px solid var(--border); border-radius: 1rem; padding: 1rem 1.2rem; box-shadow: 0 10px 22px rgba(15, 23, 42, 0.08); display: flex; align-items: center; gap: 0.8rem; }
+.login-card { background: var(--panel-bg); border: 1px solid var(--border); border-radius: 1rem; padding: 1rem 1.2rem; box-shadow: 0 10px 22px rgba(15, 23, 42, 0.25); display: flex; align-items: center; gap: 0.8rem; }
         .login-card form { display: flex; align-items: center; gap: 0.6rem; }
-        .login-card input { border: 1px solid var(--border); border-radius: 0.6rem; padding: 0.45rem 0.6rem; font-size: 0.9rem; }
+.login-card input { border: 1px solid var(--border); border-radius: 0.6rem; padding: 0.45rem 0.6rem; font-size: 0.9rem; background: rgba(15,23,42,0.6); color: var(--text); }
         .login-card button { background: var(--primary); color: #fff; border: none; border-radius: 0.6rem; padding: 0.45rem 0.75rem; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
-        .tabs-container { background: #ffffff; border: 1px solid var(--border); border-radius: 1.2rem; box-shadow: 0 12px 26px rgba(15, 23, 42, 0.12); overflow: hidden; display: flex; flex-direction: column; }
-        .tabs-header { display: flex; align-items: center; gap: 0.25rem; border-bottom: 1px solid var(--border); background: #f9fafb; padding: 0.35rem 0.6rem; }
+.tabs-container { background: var(--panel-bg); border: 1px solid var(--border); border-radius: 1.2rem; box-shadow: 0 12px 26px rgba(15, 23, 42, 0.35); overflow: hidden; display: flex; flex-direction: column; }
+.tabs-header { display: flex; align-items: center; gap: 0.25rem; border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.03); padding: 0.35rem 0.6rem; }
         .tab-btn { appearance: none; border: none; background: transparent; padding: 0.75rem 1.35rem; border-radius: 0.9rem; font-size: 0.95rem; font-weight: 600; color: var(--muted); cursor: pointer; transition: background 0.15s ease, color 0.15s ease; }
         .tab-btn:hover { background: rgba(37, 99, 235, 0.12); color: var(--primary); }
-        .tab-btn.active { background: #ffffff; color: var(--primary); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15); }
+.tab-btn.active { background: rgba(255,255,255,0.1); color: var(--primary); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25); }
         .tab-content { display: none; padding: 1.8rem; }
         .tab-content.active { display: block; }
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.2rem; }
-        .stat-card { background: var(--primary-light); border-radius: 1rem; padding: 1.2rem; display: grid; gap: 0.4rem; }
+.stat-card { background: var(--primary-light); border-radius: 1rem; padding: 1.2rem; display: grid; gap: 0.4rem; color: var(--text); }
         .stat-card h3 { margin: 0; font-size: 0.9rem; color: var(--primary); }
         .stat-card strong { font-size: 1.8rem; }
         .section-title { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-bottom: 1.4rem; }
@@ -68,13 +86,13 @@
         .data-table-wrapper { border-radius: 16px; overflow: hidden; border: 1px solid var(--border); }
         .data-table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
         .data-table th, .data-table td { padding: 0.65rem 0.9rem; border-bottom: 1px solid var(--border); text-align: left; }
-        .data-table thead { background: #f8fafc; }
+.data-table thead { background: rgba(255,255,255,0.06); }
         .empty-placeholder { margin-top: 1rem; color: var(--muted); font-size: 0.9rem; }
-        .form-card { background: #f9fafb; border: 1px solid var(--border); border-radius: 1rem; padding: 1.4rem; margin-top: 1.5rem; display: grid; gap: 0.85rem; }
+.form-card { background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 1rem; padding: 1.4rem; margin-top: 1.5rem; display: grid; gap: 0.85rem; color: var(--text); }
         .form-card.highlight { box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.18); }
         .form-card h4 { margin: 0; font-size: 1rem; }
         .form-card label { display: grid; gap: 0.35rem; font-size: 0.9rem; }
-        .form-card input, .form-card textarea, .form-card select { border: 1px solid var(--border); border-radius: 0.7rem; padding: 0.55rem 0.7rem; font-size: 0.95rem; }
+.form-card input, .form-card textarea, .form-card select { border: 1px solid var(--border); border-radius: 0.7rem; padding: 0.55rem 0.7rem; font-size: 0.95rem; background: rgba(15,23,42,0.6); color: var(--text); }
         .input-with-helper { display: flex; align-items: center; gap: 0.6rem; }
         .input-with-helper input { flex: 1 1 auto; }
         .fill-now-btn { border: none; background: rgba(37, 99, 235, 0.12); color: var(--primary); border-radius: 0.6rem; padding: 0.4rem 0.8rem; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: background 0.15s ease, color 0.15s ease; }
@@ -138,6 +156,7 @@
             </div>
             <div class="top-actions">
                 <button type="button" onclick="window.dashboardRefresh && window.dashboardRefresh()">刷新数据</button>
+                <button type="button" data-theme-toggle>切换日间</button>
                 <div class="login-card" data-auth-visible="guest" style="display:none;">
                     <form method="post" action="/login" data-ajax="true">
                         <?= csrf_field() ?>
@@ -572,6 +591,26 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
     let dashboardData = {};
     const globalMessage = document.querySelector('[data-global-message]');
     let globalMessageTimer = null;
+    const themeToggle = document.querySelector('[data-theme-toggle]');
+
+    const applyTheme = (theme) => {
+        if (theme === 'light') {
+            document.body.classList.add('theme-light');
+            themeToggle && (themeToggle.textContent = '切换夜间');
+        } else {
+            document.body.classList.remove('theme-light');
+            themeToggle && (themeToggle.textContent = '切换日间');
+        }
+        localStorage.setItem('theme', theme);
+    };
+
+    applyTheme(localStorage.getItem('theme') === 'light' ? 'light' : 'dark');
+    if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
+            const next = document.body.classList.contains('theme-light') ? 'dark' : 'light';
+            applyTheme(next);
+        });
+    }
 
     const syncAuthVisibility = () => {
         document.querySelectorAll('[data-auth-visible]').forEach((block) => {
