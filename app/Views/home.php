@@ -28,10 +28,6 @@
         body { margin: 0; min-height: 100vh; font-family: "Inter", "PingFang SC", "Microsoft YaHei", sans-serif; background: radial-gradient(circle at top, #1f2a44, #0c1224); color: var(--text); position: relative; }
         body::after { content: ""; position: fixed; inset: 0; pointer-events: none; background-image: radial-gradient(#fff5 1px, transparent 1px); background-size: 3px 3px; opacity: 0.1; }
         .app { display: flex; min-height: 100vh; position: relative; z-index: 1; }
-        .sidebar-icons { width: 82px; background: linear-gradient(180deg, #0b1221, #131b32); color: #fff; display: flex; flex-direction: column; align-items: center; padding: 1rem 0; gap: 1.25rem; border-right: 1px solid rgba(255,255,255,0.08); }
-        .sidebar-icons button { width: 52px; height: 52px; border-radius: 16px; border: none; background: rgba(255,255,255,0.08); color: inherit; font-size: 0.8rem; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.2rem; cursor: pointer; transition: background 0.2s; }
-        .sidebar-icons button span { font-size: 1rem; }
-        .sidebar-icons button.active, .sidebar-icons button:hover { background: rgba(79, 165, 255, 0.35); }
         .sidebar { width: 240px; background: rgba(17, 25, 40, 0.88); backdrop-filter: blur(6px); color: var(--sidebar-text); display: flex; flex-direction: column; padding: 1.5rem 1rem; gap: 1.5rem; border-right: 1px solid rgba(255,255,255,0.06); }
         .sidebar .logo { font-size: 1.3rem; font-weight: 700; letter-spacing: 0.06em; text-align: center; }
         .sidebar-search { display: flex; gap: 0.4rem; align-items: center; background: rgba(255,255,255,0.04); border-radius: 0.8rem; padding: 0.35rem 0.6rem; }
@@ -114,13 +110,6 @@
 </head>
 <body>
 <div class="app">
-    <aside class="sidebar-icons">
-        <button class="active" type="button"><span>☰</span>菜单</button>
-        <button type="button"><span>📄</span>页面</button>
-        <button type="button"><span>📝</span>记录</button>
-        <button type="button"><span>💬</span>讨论</button>
-        <button type="button"><span>⚙️</span>系统</button>
-    </aside>
     <aside class="sidebar">
         <div class="logo">资产运营平台</div>
         <div class="sidebar-search">
