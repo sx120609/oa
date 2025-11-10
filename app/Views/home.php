@@ -1067,9 +1067,6 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
             return;
         }
         activeEditKey = key;
-        if (editOverlay) {
-            editOverlay.classList.add('show');
-        }
         panel.classList.add('show');
     };
 
