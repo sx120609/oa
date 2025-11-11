@@ -165,6 +165,12 @@ body.theme-light {
             background: linear-gradient(120deg, #5db5ff, #2563eb);
             box-shadow: 0 12px 24px rgba(37, 99, 235, 0.28);
             transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+            width: 100%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 0.5rem;
+            min-height: 48px;
         }
         .form-card button[type="submit"]:hover,
         .edit-panel button[type="submit"]:hover,
