@@ -89,6 +89,7 @@ body.theme-light {
         .topbar { padding: 1.5rem 0; display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; }
         .breadcrumb { display: flex; align-items: center; gap: 0.65rem; font-size: 0.95rem; color: var(--muted); }
         .top-actions { display: flex; align-items: center; gap: 1rem; }
+        .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; }
         .top-actions button { background: var(--primary); color: #fff; border: none; border-radius: 0.75rem; padding: 0.55rem 1.1rem; font-weight: 600; cursor: pointer; transition: transform 0.15s ease, box-shadow 0.15s ease; }
         .top-actions button.logout-btn { background: var(--danger); }
         .top-actions button:hover { transform: translateY(-1px); box-shadow: 0 12px 20px rgba(37, 99, 235, 0.2); }
@@ -111,11 +112,16 @@ body.theme-light {
         .section-title { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-bottom: 1.4rem; }
         .section-title h2 { margin: 0; font-size: 1.3rem; letter-spacing: 0.04em; }
         .badge { background: var(--surface-soft); color: var(--text); padding: 0.3rem 0.85rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600; }
-        .top-actions [data-theme-toggle] { width: 40px; height: 40px; padding: 0; font-size: 1.1rem; display: inline-flex; align-items: center; justify-content: center; }
+        .top-actions .theme-toggle { width: 40px; height: 40px; padding: 0; border-radius: 999px; border: 1px solid rgba(255,255,255,0.15); background: transparent; position: relative; overflow: hidden; }
+        .top-actions .theme-toggle::before { content: ""; position: absolute; inset: 8px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.85), rgba(255,255,255,0) 60%), linear-gradient(135deg, #f59e0b, #f97316); box-shadow: inset -4px -4px 8px rgba(15,23,42,0.35); }
+        .top-actions .theme-toggle::after { content: ""; position: absolute; width: 4px; height: 4px; border-radius: 50%; background: rgba(255,255,255,0.8); top: 6px; right: 6px; box-shadow: 0 0 6px rgba(255,255,255,0.9); }
+        body.theme-light .top-actions .theme-toggle { border-color: rgba(15,23,42,0.15); }
+        body.theme-light .top-actions .theme-toggle::before { background: radial-gradient(circle at 30% 30%, rgba(37,99,235,0.35), rgba(37,99,235,0) 55%), linear-gradient(135deg, #fde68a, #fcd34d); box-shadow: inset -3px -3px 6px rgba(255,255,255,0.6); }
+        body.theme-light .top-actions .theme-toggle::after { background: rgba(37,99,235,0.6); box-shadow: 0 0 8px rgba(37,99,235,0.35); }
         .data-table-wrapper { border-radius: 16px; overflow: hidden; border: 1px solid var(--border); }
         .data-table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
         .data-table th, .data-table td { padding: 0.65rem 0.9rem; border-bottom: 1px solid var(--border); text-align: left; }
-.data-table thead { background: rgba(255,255,255,0.06); }
+        .data-table thead { background: rgba(255,255,255,0.06); }
         .empty-placeholder { margin-top: 1rem; color: var(--muted); font-size: 0.9rem; }
 .form-card { background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 1rem; padding: 1.4rem; margin-top: 1.5rem; display: grid; gap: 0.85rem; color: var(--text); }
         .form-card.highlight { box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.18); }
@@ -146,6 +152,39 @@ body.theme-light {
         .action-btn.edit { background: rgba(37, 99, 235, 0.12); color: var(--primary); }
         .action-btn.delete { background: rgba(239, 68, 68, 0.12); color: var(--danger); }
         .action-btn.delete:hover { opacity: 0.75; }
+        .form-card button[type="submit"],
+        .edit-panel button[type="submit"],
+        [data-return-panel] button[type="submit"],
+        .login-card form button[type="submit"] {
+            border: none;
+            border-radius: 0.85rem;
+            padding: 0.65rem 1.2rem;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: #fff;
+            background: linear-gradient(120deg, #5db5ff, #2563eb);
+            box-shadow: 0 12px 24px rgba(37, 99, 235, 0.28);
+            transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+        }
+        .form-card button[type="submit"]:hover,
+        .edit-panel button[type="submit"]:hover,
+        [data-return-panel] button[type="submit"]:hover,
+        .login-card form button[type="submit"]:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 16px 28px rgba(37, 99, 235, 0.32);
+            filter: brightness(1.05);
+        }
+        body.theme-light .form-card button[type="submit"],
+        body.theme-light .edit-panel button[type="submit"],
+        body.theme-light [data-return-panel] button[type="submit"],
+        body.theme-light .login-card form button[type="submit"] {
+            background: linear-gradient(120deg, #60a5fa, #2563eb);
+            box-shadow: 0 12px 24px rgba(37, 99, 235, 0.25);
+        }
+        .logout-btn {
+            background: var(--danger) !important;
+            box-shadow: 0 12px 24px rgba(239, 68, 68, 0.3) !important;
+        }
         footer { padding: 1.6rem 3rem; text-align: center; color: var(--muted); font-size: 0.85rem; }
         @media (max-width: 800px) {
             .sidebar { display: none; }
@@ -185,7 +224,9 @@ body.theme-light {
             </div>
             <div class="top-actions">
                 <button type="button" data-refresh-trigger>刷新数据</button>
-                <button type="button" data-theme-toggle aria-label="切换主题">☀</button>
+                <button type="button" class="theme-toggle" data-theme-toggle aria-label="切换主题">
+                    <span class="sr-only">切换主题</span>
+                </button>
                 <form method="post" action="/logout" data-ajax="true" data-logout-form="true" data-auth-visible="authenticated" style="display:none;">
                     <?= csrf_field() ?>
                     <button type="submit" class="logout-btn">退出</button>
@@ -630,10 +671,15 @@ window.__DASHBOARD_DATA__ = <?= $initialDashboardJson ?>;
         const nextTheme = theme === 'light' ? 'light' : 'dark';
         if (nextTheme === 'light') {
             document.body.classList.add('theme-light');
-            if (themeToggle) themeToggle.textContent = '🌙';
         } else {
             document.body.classList.remove('theme-light');
-            if (themeToggle) themeToggle.textContent = '☀';
+        }
+        if (themeToggle) {
+            themeToggle.dataset.mode = nextTheme;
+            themeToggle.setAttribute(
+                'aria-label',
+                nextTheme === 'light' ? '切换至夜间模式' : '切换至日间模式'
+            );
         }
         localStorage.setItem('theme', nextTheme);
     };
